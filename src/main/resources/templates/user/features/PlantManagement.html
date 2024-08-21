@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crop Management - SFMS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body, html {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            background-color: #f0f4f8;
+            color: #333;
+        }
+
+        body.dark-mode {
+            background-color: #1a1a1a;
+            color: #f0f0f0;
+        }
+
+        /* Container */
+        .container {
+            width: 95%;
+            max-width: 1200px;
+            margin: auto;
+            overflow: hidden;
+            padding: 12px;
+        }
+
+        /* Navbar */
+        .navbar {
+            background-color: #3498db;
+            color: #fff;
+            padding: 8px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .dark-mode .navbar {
+            background-color: #2c3e50;
+        }
+
+        .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-brand {
+            font-size: 1.6em;
+            font-weight: bold;
+            text-align: center;
+            flex-grow: 1;
+        }
+
+        .navbar-back {
+            color: #fff;
+            text-decoration: none;
+            font-size: 1.2em;
+            transition: color 0.3s ease;
+            margin-right: auto;
+        }
+
+        .navbar-back:hover {
+            color: #f0f0f0;
+        }
+
+        #darkModeToggle {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.2em;
+            cursor: pointer;
+            padding: 5px;
+            margin-left: 10px;
+        }
+
+        /* Buttons */
+        .add-plant-btn, .predict-yield-btn {
+            display: inline-block;
+            color: #fff;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        .add-plant-btn {
+            background: #2ecc71;
+        }
+
+        .add-plant-btn:hover {
+            background-color: #27ae60;
+        }
+
+        .predict-yield-btn {
+            background: #e67e22;
+            margin-left: 8px;
+        }
+
+        .predict-yield-btn:hover {
+            background-color: #d35400;
+        }
+
+        /* Plant Profiles Grid */
+        .plant-profiles {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        /* Plant Profile Card */
+        .plant-profile {
+            background: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, background-color 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dark-mode .plant-profile {
+            background: #2c3e50;
+            box-shadow: 0 2px 4px rgba(255,255,255,0.1);
+        }
+
+        .plant-profile:hover {
+            transform: translateY(-3px);
+        }
+
+        .plant-profile img {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .plant-info {
+            flex-grow: 1;
+        }
+
+        .plant-info h3 {
+            margin: 0 0 8px 0;
+            font-size: 1.2em;
+        }
+
+        .plant-info p {
+            margin: 4px 0;
+            font-size: 0.9em;
+        }
+
+        /* Plant Action Buttons */
+        .plant-actions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            margin-top: 8px;
+        }
+
+        .plant-actions button {
+            padding: 4px 2px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #fff;
+            font-size: 12px;
+            transition: background-color 0.3s ease;
+        }
+
+        .view-btn {
+            background-color: #3498db;
+            grid-column: span 3;
+        }
+        .view-btn:hover { background-color: #2980b9; }
+
+        .edit-btn { background-color: #2ecc71; }
+        .edit-btn:hover { background-color: #27ae60; }
+
+        .remove-btn { background-color: #e74c3c; }
+        .remove-btn:hover { background-color: #c0392b; }
+
+        .irrigation-btn { background-color: #f39c12; }
+        .irrigation-btn:hover { background-color: #d35400; }
+
+        .harvest-btn { background-color: #9b59b6; }
+        .harvest-btn:hover { background-color: #8e44ad; }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: background-color 0.3s;
+        }
+
+        .dark-mode .modal-content {
+            background-color: #34495e;
+            border-color: #2c3e50;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+        }
+
+        .dark-mode .close:hover,
+        .dark-mode .close:focus {
+            color: #fff;
+        }
+
+        /* Form Styles */
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        form label {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        form select,
+        form textarea,
+        form input {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+
+        .dark-mode form select,
+        .dark-mode form textarea,
+        .dark-mode form input {
+            background-color: #2c3e50;
+            color: #f0f0f0;
+            border-color: #34495e;
+        }
+
+        form button {
+            background-color: #3498db;
+            color: #fff;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        form button:hover {
+            background-color: #2980b9;
+        }
+
+        /* Prediction Result */
+        .prediction-result {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .prediction-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .prediction-failure {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .dark-mode .prediction-success {
+            background-color: #1e4620;
+            color: #d4edda;
+            border-color: #2d6a4f;
+        }
+
+        .dark-mode .prediction-failure {
+            background-color: #5c1e1e;
+            color: #f8d7da;
+            border-color: #842029;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                width: 90%;
+            }
+
+            .plant-profiles {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+
+            .add-plant-btn,
+            .predict-yield-btn {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .predict-yield-btn {
+                margin-left: 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .plant-profiles {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="container navbar-content">
+        <a href="/user/features/UserDashBoard" class="navbar-back">
+            <i class="fas fa-home"></i>
+        </a>
+        <div class="navbar-brand">
+            <i class="fas fa-seedling"></i>
+            Crop & conditions Management
+        </div>
+        <button id="darkModeToggle">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
+</nav>
+
+<div class="container">
+    <button id="addPlantBtn" class="add-plant-btn">
+        <i class="fas fa-plus"></i> Add Plant
+    </button>
+    <button id="plantPredictionBtn" class="predict-yield-btn">
+        <i class="fas fa-seedling"></i> Plant Prediction
+    </button>
+
+    <div class="plant-profiles" id="plantProfiles">
+        <!-- Plant profiles will be dynamically added here -->
+    </div>
+</div>
+
+<!-- Add/Edit Plant Modal -->
+<div id="plantModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 id="modalTitle">Add New Plant</h2>
+        <form id="plantForm">
+            <label for="cropType">Crop Type:</label>
+            <select id="cropType" required>
+                <option value="">Select Crop Type</option>
+            </select>
+
+            <label for="cropName">Crop Name:</label>
+            <select id="cropName" required>
+                <option value="">Select Crop Name</option>
+            </select>
+
+            <label for="customNotes">Custom Notes:</label>
+            <textarea id="customNotes" rows="4"></textarea>
+
+            <button type="submit">Save Plant</button>
+        </form>
+    </div>
+</div>
+
+<!-- Plant Detail Modal -->
+<div id="plantDetailModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 id="detailModalTitle"></h2>
+        <div id="plantDetails"></div>
+    </div>
+</div>
+
+<!-- Irrigation Schedule Modal -->
+<div id="irrigationModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Irrigation Schedule</h2>
+        <div id="irrigationDetails"></div>
+    </div>
+</div>
+
+<!-- Expected Harvest Modal -->
+<div id="harvestModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Expected Harvest</h2>
+        <div id="harvestDetails"></div>
+    </div>
+</div>
+
+<!-- Plant Prediction Modal -->
+<div id="plantPredictionModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Plant Prediction</h2>
+        <form id="plantPredictionForm">
+            <label for="predictionCropType">Crop Type:</label>
+            <select id="predictionCropType" required>
+                <option value="">Select Crop Type</option>
+            </select>
+
+            <label for="predictionCropName">Crop Name:</label>
+            <select id="predictionCropName" required>
+                <option value="">Select Crop Name</option>
+            </select>
+
+            <label for="predictionPH">PH:</label>
+            <input type="number" id="predictionPH" step="0.1" required>
+
+            <label for="predictionN">Nitrogen (N):</label>
+            <input type="number" id="predictionN" step="0.1" required>
+
+            <label for="predictionP">Phosphorus (P):</label>
+            <input type="number" id="predictionP" step="0.1" required>
+
+            <label for="predictionK">Potassium (K):</label>
+            <input type="number" id="predictionK" step="0.1" required>
+
+            <label for="predictionSoilType">Soil Type:</label>
+            <select id="predictionSoilType" required>
+                <option value="">Select Soil Type</option>
+                <option value="Clay">Clay</option>
+                <option value="Sandy">Sandy</option>
+                <option value="Loamy">Loamy</option>
+                <option value="Peaty">Peaty</option>
+                <option value="Chalky">Chalky</option>
+                <option value="Silt">Silt</option>
+            </select>
+
+            <button type="submit">Predict</button>
+        </form>
+        <div id="predictionResult" class="prediction-result"></div>
+    </div>
+</div>
+<script>
+// DOM Elements
+const addPlantBtn = document.getElementById('addPlantBtn');
+const plantPredictionBtn = document.getElementById('plantPredictionBtn');
+const plantProfilesContainer = document.getElementById('plantProfiles');
+const darkModeToggle = document.getElementById('darkModeToggle');
+
+// Modals
+const plantModal = document.getElementById('plantModal');
+const plantDetailModal = document.getElementById('plantDetailModal');
+const irrigationModal = document.getElementById('irrigationModal');
+const harvestModal = document.getElementById('harvestModal');
+const plantPredictionModal = document.getElementById('plantPredictionModal');
+
+// Modal content elements
+const modalTitle = document.getElementById('modalTitle');
+const plantForm = document.getElementById('plantForm');
+const cropTypeSelect = document.getElementById('cropType');
+const cropNameSelect = document.getElementById('cropName');
+const customNotesTextarea = document.getElementById('customNotes');
+const predictionCropTypeSelect = document.getElementById('predictionCropType');
+const predictionCropNameSelect = document.getElementById('predictionCropName');
+const plantPredictionForm = document.getElementById('plantPredictionForm');
+const predictionResult = document.getElementById('predictionResult');
+
+// Close buttons
+const closeBtns = document.getElementsByClassName('close');
+
+// Global variables
+let currentUserId = '123'; // This should be set dynamically based on the logged-in user
+let editingProfileId = null;
+
+// Event Listeners
+addPlantBtn.addEventListener('click', openAddPlantModal);
+plantPredictionBtn.addEventListener('click', openPlantPredictionModal);
+plantForm.addEventListener('submit', handlePlantFormSubmit);
+cropTypeSelect.addEventListener('change', () => loadCropNames(cropTypeSelect, cropNameSelect));
+predictionCropTypeSelect.addEventListener('change', () => loadCropNames(predictionCropTypeSelect, predictionCropNameSelect));
+plantPredictionForm.addEventListener('submit', handlePlantPrediction);
+darkModeToggle.addEventListener('click', toggleDarkMode);
+
+for (let closeBtn of closeBtns) {
+closeBtn.addEventListener('click', closeModals);
+}
+
+// Load plant profiles on page load
+loadPlantProfiles();
+
+// Check for saved theme preference
+if (localStorage.getItem('darkMode') === 'enabled') {
+document.body.classList.add('dark-mode');
+darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+}
+
+// Functions
+
+function toggleDarkMode() {
+document.body.classList.toggle('dark-mode');
+if (document.body.classList.contains('dark-mode')) {
+localStorage.setItem('darkMode', 'enabled');
+darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+} else {
+localStorage.setItem('darkMode', 'disabled');
+darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+}
+}
+
+function openAddPlantModal() {
+modalTitle.textContent = 'Add New Plant';
+editingProfileId = null;
+plantForm.reset();
+loadCropTypes(cropTypeSelect);
+plantModal.style.display = 'block';
+}
+
+function openPlantPredictionModal() {
+loadCropTypes(predictionCropTypeSelect);
+plantPredictionModal.style.display = 'block';
+}
+
+function closeModals() {
+plantModal.style.display = 'none';
+plantDetailModal.style.display = 'none';
+irrigationModal.style.display = 'none';
+harvestModal.style.display = 'none';
+plantPredictionModal.style.display = 'none';
+}
+
+function loadCropTypes(selectElement) {
+fetch('/api/plant-profiles/crop-types')
+.then(response => response.json())
+.then(cropTypes => {
+selectElement.innerHTML = '<option value="">Select Crop Type</option>';
+cropTypes.forEach(type => {
+const option = document.createElement('option');
+option.value = type;
+option.textContent = type;
+selectElement.appendChild(option);
+});
+})
+.catch(error => console.error('Error loading crop types:', error));
+}
+
+function loadCropNames(cropTypeSelect, cropNameSelect) {
+const selectedType = cropTypeSelect.value;
+if (selectedType) {
+fetch(`/api/plant-profiles/plants/${selectedType}`)
+.then(response => response.json())
+.then(plants => {
+cropNameSelect.innerHTML = '<option value="">Select Crop Name</option>';
+plants.forEach(plant => {
+const option = document.createElement('option');
+option.value = plant.id;
+option.textContent = plant.cropName;
+cropNameSelect.appendChild(option);
+});
+})
+.catch(error => console.error('Error loading crop names:', error));
+} else {
+cropNameSelect.innerHTML = '<option value="">Select Crop Name</option>';
+}
+}
+
+function handlePlantFormSubmit(event) {
+event.preventDefault();
+const plantId = cropNameSelect.value;
+const customNotes = customNotesTextarea.value;
+
+const plantProfile = {
+plant: { id: plantId },
+userId: currentUserId,
+customNotes: customNotes
+};
+
+const url = editingProfileId
+? `/api/plant-profiles/${editingProfileId}`
+: '/api/plant-profiles';
+const method = editingProfileId ? 'PUT' : 'POST';
+
+fetch(url, {
+method: method,
+headers: {
+'Content-Type': 'application/json',
+},
+body: JSON.stringify(plantProfile),
+})
+.then(response => response.json())
+.then(savedProfile => {
+plantModal.style.display = 'none';
+loadPlantProfiles();
+})
+.catch(error => console.error('Error saving plant profile:', error));
+}
+
+function loadPlantProfiles() {
+fetch(`/api/plant-profiles/user/${currentUserId}`)
+.then(response => response.json())
+.then(profiles => {
+plantProfilesContainer.innerHTML = '';
+profiles.forEach(profile => {
+const profileElement = createProfileElement(profile);
+plantProfilesContainer.appendChild(profileElement);
+});
+})
+.catch(error => console.error('Error loading plant profiles:', error));
+}
+
+function createProfileElement(profile) {
+const profileDiv = document.createElement('div');
+profileDiv.className = 'plant-profile';
+profileDiv.innerHTML = `
+<img src="${profile.plant.imageUrl || '/placeholder-image.jpg'}" alt="${profile.plant.cropName}">
+<h3>${profile.plant.cropName}</h3>
+<p>Type: ${profile.plant.cropType}</p>
+<p>Notes: ${profile.customNotes || 'No custom notes'}</p>
+<div class="plant-actions">
+    <button class="view-btn" onclick="viewPlantDetail(${profile.plant.id})">Plant Details</button>
+    <button class="edit-btn" onclick="editPlantProfile(${profile.id})">Edit</button>
+    <button class="remove-btn" onclick="removePlantProfile(${profile.id})">Remove</button>
+    <button class="irrigation-btn" onclick="viewIrrigationSchedule(${profile.plant.id})">Irrigation</button>
+    <button class="harvest-btn" onclick="viewExpectedHarvest(${profile.plant.id})">Harvest</button>
+</div>
+`;
+return profileDiv;
+}
+
+function viewPlantDetail(plantId) {
+fetch(`/api/plants/${plantId}`)
+.then(response => response.json())
+.then(plant => {
+const detailModalTitle = document.getElementById('detailModalTitle');
+const plantDetails = document.getElementById('plantDetails');
+
+detailModalTitle.textContent = plant.cropName;
+plantDetails.innerHTML = `
+<p><strong>Crop Type:</strong> ${plant.cropType}</p>
+<p><strong>Crop Details:</strong></p>
+${formatCropDetails(plant.cropDetails)}
+<p><strong>Fertilizer Application:</strong></p>
+${formatFertilizerApplication(plant.fertilizerApplication)}
+<p><strong>Pest Management:</strong></p>
+${formatPestManagement(plant.pestManagement)}
+<p><strong>Harvesting:</strong></p>
+${formatHarvesting(plant.harvesting)}
+`;
+
+plantDetailModal.style.display = 'block';
+})
+.catch(error => console.error('Error loading plant details:', error));
+}
+
+function viewIrrigationSchedule(plantId) {
+fetch(`/api/plants/${plantId}`)
+.then(response => response.json())
+.then(plant => {
+const irrigationDetails = document.getElementById('irrigationDetails');
+irrigationDetails.innerHTML = `<p>${plant.irrigationTips}</p>`;
+irrigationModal.style.display = 'block';
+})
+.catch(error => console.error('Error loading irrigation schedule:', error));
+}
+
+function viewExpectedHarvest(plantId) {
+const harvestDetails = document.getElementById('harvestDetails');
+harvestDetails.innerHTML = '<p>Loading harvest details...</p>';
+harvestModal.style.display = 'block';
+
+fetch(`/api/plants/${plantId}/harvest-info`)
+.then(response => {
+if (!response.ok) {
+throw new Error('Network response was not ok');
+}
+return response.json();
+})
+.then(harvestInfo => {
+if (harvestInfo.needDuration) {
+const today = new Date();
+const harvestDate = new Date(today.getTime() + (parseInt(harvestInfo.needDuration) * 24 * 60 * 60 * 1000));
+const formattedHarvestDate = harvestDate.toLocaleDateString();
+
+harvestDetails.innerHTML = `
+<p><strong>Expected harvest duration:</strong> ${harvestInfo.needDuration}</p>
+<p>Your expected harvesting date: From today to after ${formattedHarvestDate}</p>
+`;
+} else {
+harvestDetails.innerHTML = '<p>No harvest duration information available for this plant.</p>';
+}
+})
+.catch(error => {
+console.error('Error loading expected harvest:', error);
+harvestDetails.innerHTML = '<p>Error loading harvest details. Please try again.</p>';
+});
+}
+
+function editPlantProfile(profileId) {
+editingProfileId = profileId;
+modalTitle.textContent = 'Edit Plant Profile';
+
+fetch(`/api/plant-profiles/${profileId}`)
+.then(response => response.json())
+.then(profile => {
+loadCropTypes(cropTypeSelect);
+setTimeout(() => {
+cropTypeSelect.value = profile.plant.cropType;
+loadCropNames(cropTypeSelect, cropNameSelect);
+setTimeout(() => {
+cropNameSelect.value = profile.plant.id;
+customNotesTextarea.value = profile.customNotes || '';
+plantModal.style.display = 'block';
+}, 100);
+}, 100);
+})
+.catch(error => console.error('Error loading plant profile for editing:', error));
+}
+
+function removePlantProfile(profileId) {
+if (confirm('Are you sure you want to remove this plant profile?')) {
+fetch(`/api/plant-profiles/${profileId}`, { method: 'DELETE' })
+.then(() => {
+loadPlantProfiles();
+})
+.catch(error => console.error('Error removing plant profile:', error));
+}
+}
+
+function handlePlantPrediction(event) {
+event.preventDefault();
+const plantId = predictionCropNameSelect.value;
+const ph = document.getElementById('predictionPH').value;
+const n = document.getElementById('predictionN').value;
+const p = document.getElementById('predictionP').value;
+const k = document.getElementById('predictionK').value;
+const soilType = document.getElementById('predictionSoilType').value;
+
+const predictionData = {
+plantId: plantId,
+ph: parseFloat(ph),
+n: parseFloat(n),
+p: parseFloat(p),
+k: parseFloat(k),
+soilType: soilType
+};
+
+fetch('/api/plants/predict', {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json',
+},
+body: JSON.stringify(predictionData),
+})
+.then(response => response.json())
+.then(result => {
+predictionResult.innerHTML = result.message;
+predictionResult.className = 'prediction-result ' + (result.suitable ? 'prediction-success' : 'prediction-failure');
+})
+.catch(error => {
+console.error('Error predicting plant suitability:', error);
+predictionResult.innerHTML = 'An error occurred while predicting plant suitability.';
+predictionResult.className = 'prediction-result prediction-failure';
+});
+}
+
+// Helper functions for formatting plant details
+function formatCropDetails(details) {
+try {
+const parsedDetails = JSON.parse(details);
+return `
+<ul>
+    <li>Scientific name: ${parsedDetails.scientific_name}</li>
+    <li>Growth duration: ${parsedDetails.growth_duration}</li>
+    <li>Yield potential: ${parsedDetails.yield_potential}</li>
+    <li>Planting season: ${parsedDetails.planting_season}</li>
+    <li>Planting method: ${parsedDetails.planting_method}</li>
+    <li>Planting density: ${parsedDetails.planting_density}</li>
+    <li>Planting spacing: ${parsedDetails.planting_spacing}</li>
+    <li>Soil requirements: ${parsedDetails.soil_requirements}</li>
+</ul>
+`;
+} catch (error) {
+console.error('Error parsing crop details:', error);
+return `<p>${details}</p>`;
+}
+}
+
+function formatFertilizerApplication(fertilizer) {
+try {
+const parsedFertilizer = JSON.parse(fertilizer);
+return parsedFertilizer.map(stage => `
+<h4>${stage.stage}</h4>
+<ul>
+    <li>NPK ratio: ${stage.npk_ratio}</li>
+    <li>Amount: ${stage.amount}</li>
+    <li>Frequency: ${stage.frequency || 'N/A'}</li>
+</ul>
+`).join('');
+} catch (error) {
+console.error('Error parsing fertilizer application:', error);
+return `<p>${fertilizer}</p>`;
+}
+}
+
+function formatPestManagement(pest) {
+try {
+const parsedPest = JSON.parse(pest);
+return parsedPest.map(item => `
+<h4>${item.pest}</h4>
+<p>Control: ${item.control}</p>
+`).join('');
+} catch (error) {
+console.error('Error parsing pest management:', error);
+return `<p>${pest}</p>`;
+}
+}
+
+function formatHarvesting(harvesting) {
+try {
+const parsedHarvesting = JSON.parse(harvesting);
+return `
+<ul>
+    <li>Indicators: ${parsedHarvesting.indicators}</li>
+    <li>Method: ${parsedHarvesting.method}</li>
+    <li>Season: ${parsedHarvesting.season}</li>
+    <li>Post-harvest: ${parsedHarvesting.post_harvest}</li>
+</ul>
+`;
+} catch (error) {
+console.error('Error parsing harvesting:', error);
+return `<p>${harvesting}</p>`;
+}
+}
+
+// Close modal when clicking outside of it
+window.onclick = function(event) {
+if (event.target == plantModal || event.target == plantDetailModal ||
+event.target == irrigationModal || event.target == harvestModal ||
+event.target == plantPredictionModal) {
+event.target.style.display = 'none';
+}
+}
+</script>
+</body>
+</html>

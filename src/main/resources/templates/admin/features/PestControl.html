@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SFMS - Pest Control Recommendations</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+            padding: 20px;
+        }
+        header {
+            background: #27ae60;
+            color: white;
+            padding-top: 30px;
+            min-height: 70px;
+            border-bottom: #f39c12 3px solid;
+        }
+        header h1 {
+            margin: 0;
+            text-align: center;
+            padding-bottom: 20px;
+        }
+        .recommendation-container {
+            background: #fff;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        .pest-form {
+            margin-bottom: 20px;
+        }
+        .pest-form label, .pest-form select {
+            display: block;
+            margin-bottom: 10px;
+        }
+        .pest-form select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .recommendation {
+            background: #eaf7ea;
+            border: 1px solid #27ae60;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .btn {
+            display: inline-block;
+            background: #27ae60;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .btn:hover {
+            background: #219a52;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div class="container">
+        <h1>Pest Control Recommendations</h1>
+    </div>
+</header>
+
+<div class="container">
+    <div class="recommendation-container">
+        <h2>Get Pest Control Advice</h2>
+        <form class="pest-form">
+            <label for="crop-type">Select Crop:</label>
+            <select id="crop-type" name="crop-type">
+                <option value="rice">Rice</option>
+                <option value="wheat">Wheat</option>
+                <option value="corn">Corn</option>
+            </select>
+            <label for="pest-type">Select Pest:</label>
+            <select id="pest-type" name="pest-type">
+                <option value="aphids">Aphids</option>
+                <option value="grasshoppers">Grasshoppers</option>
+                <option value="stem-borers">Stem Borers</option>
+            </select>
+            <button type="submit" class="btn">Get Recommendations</button>
+        </form>
+        <div class="recommendation">
+            <h3>Recommendation:</h3>
+            <p>For aphids on rice, use neem oil spray. Apply early in the morning or late in the evening for best results. Repeat application every 7 days until the infestation is under control.</p>
+        </div>
+    </div>
+</div>
+</body>
+</html>

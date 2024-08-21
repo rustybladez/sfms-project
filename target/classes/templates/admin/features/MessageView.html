@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SFMS - Message Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #8799ac;;
+            --secondary-color: #f39c12;
+            --background-color: #f0f3f6;
+            --text-color: #333;
+            --card-background: #fff;
+            --hover-color: #e8f0fe;
+            --transition-speed: 0.3s;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            margin: 0;
+            padding: 0;
+            transition: background-color var(--transition-speed), color var(--transition-speed);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        h1, h2 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        /* Navbar styles */
+        .navbar {
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 10px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: var(--box-shadow);
+        }
+
+        .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .navbar-left a {
+            color: #fff;
+            text-decoration: none;
+            margin-right: 20px;
+            transition: color var(--transition-speed);
+            font-weight: bold;
+        }
+
+        .navbar-left a:hover {
+            color: var(--secondary-color);
+        }
+
+        .navbar-right button {
+            background-color: transparent;
+            border: none;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            transition: color var(--transition-speed);
+        }
+
+        .navbar-right button:hover {
+            color: var(--secondary-color);
+        }
+
+        /* Table styles */
+        .message-list {
+            background-color: var(--card-background);
+            border-radius: 12px;
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tr:hover {
+            background-color: var(--hover-color);
+        }
+
+        /* Button styles */
+        .action-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color var(--transition-speed), transform 0.1s;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .view-btn { background-color: #2ecc71; color: white; }
+        .reply-btn { background-color: var(--secondary-color); color: white; }
+        .delete-btn { background-color: #e74c3c; color: white; }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: var(--card-background);
+            margin: 10% auto;
+            padding: 30px;
+            border: 1px solid #888;
+            width: 60%;
+            max-width: 600px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            transition: color var(--transition-speed);
+        }
+
+        .close:hover,
+        .close:focus {
+            color: var(--text-color);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            height: 120px;
+            font-size: 16px;
+        }
+
+        .btn {
+            display: inline-block;
+            background: var(--primary-color);
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: background-color var(--transition-speed);
+        }
+
+        .btn:hover {
+            background: #3a7cbd;
+        }
+
+        /* Dark mode styles */
+        .dark-mode {
+            --primary-color: #61dafb;
+            --secondary-color: #ffa726;
+            --background-color: #1f2937;
+            --text-color: #e2e8f0;
+            --card-background: #2d3748;
+            --hover-color: #3e4c62;
+        }
+
+        .dark-mode .navbar {
+            background-color: #0d2137;
+        }
+
+        .dark-mode th {
+            background-color: #0d2137;
+        }
+
+        .dark-mode tr:hover {
+            background-color: #3e4c62;
+        }
+
+        .dark-mode .modal-content {
+            background-color: #2d3748;
+        }
+
+        .dark-mode .close:hover,
+        .dark-mode .close:focus {
+            color: #fff;
+        }
+
+        .dark-mode .form-group textarea {
+            background-color: #3e4c62;
+            color: #e2e8f0;
+            border-color: #4a5568;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 90%;
+            }
+
+            .navbar-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .navbar-left, .navbar-right {
+                margin: 10px 0;
+            }
+
+            th, td {
+                padding: 10px;
+            }
+
+            .action-btn {
+                padding: 6px 10px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="navbar-content">
+        <div class="navbar-left">
+            <a href="/admin/features/AdminDashboard"><i class="fas fa-home"></i> Home</a>
+        </div>
+        <h1><i class="fas fa-envelope"></i> Message Management - SFMS</h1>
+        <div class="navbar-right">
+            <button id="darkModeToggle"><i class="fas fa-moon"></i></button>
+        </div>
+    </div>
+</nav>
+<div class="container">
+    <div class="message-list">
+        <table>
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Date</th>
+                <th>Subject</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="contactMessage : ${contactMessages}">
+                <td th:text="${contactMessage.name}"></td>
+                <td th:text="${contactMessage.email}"></td>
+                <td th:text="${contactMessage.sendDate}"></td>
+                <td th:text="${contactMessage.subject}"></td>
+                <td>
+                    <button class="action-btn view-btn"
+                            th:onclick="viewMessage([[${contactMessage.name}]], [[${contactMessage.sendDate}]], [[${contactMessage.subject}]], [[${contactMessage.message}]])">
+                        <i class="fas fa-eye"></i> View
+                    </button>
+                    <button class="action-btn reply-btn"
+                            th:onclick="replyMessage([[${contactMessage.id}]], [[${contactMessage.name}]], [[${contactMessage.subject}]])">
+                        <i class="fas fa-reply"></i> Reply
+                    </button>
+                    <form th:action="@{/admin/features/MessageView/delete/{id}(id=${contactMessage.id})}" method="post" style="display: inline;">
+                        <button type="submit" class="action-btn delete-btn">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- View Message Modal -->
+<div id="viewModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('viewModal')">&times;</span>
+        <h2>View Message</h2>
+        <p><strong>From:</strong> <span id="viewName"></span></p>
+        <p><strong>Date:</strong> <span id="viewDate"></span></p>
+        <p><strong>Subject:</strong> <span id="viewSubject"></span></p>
+        <p><strong>Message:</strong></p>
+        <p id="viewMessage"></p>
+    </div>
+</div>
+
+<!-- Reply Message Modal -->
+<div id="replyModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('replyModal')">&times;</span>
+        <h2>Reply to Message</h2>
+        <form id="replyForm" th:action="@{/admin/features/MessageView/reply}" method="post">
+            <input type="hidden" id="replyId" name="id">
+            <p><strong>To:</strong> <span id="replyName"></span></p>
+            <p><strong>Subject:</strong> Re: <span id="replySubject"></span></p>
+            <div class="form-group">
+                <label for="replyContent">Your Reply:</label>
+                <textarea id="replyContent" name="replyContent" required></textarea>
+            </div>
+            <button type="submit" class="btn"><i class="fas fa-paper-plane"></i> Send Reply</button>
+        </form>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    function viewMessage(name, date, subject, content) {
+        document.getElementById('viewName').textContent = name;
+        document.getElementById('viewDate').textContent = date;
+        document.getElementById('viewSubject').textContent = subject;
+        document.getElementById('viewMessage').textContent = content;
+        document.getElementById('viewModal').style.display = 'block';
+    }
+
+    function replyMessage(id, name, subject) {
+        document.getElementById('replyId').value = id;
+        document.getElementById('replyName').textContent = name;
+        document.getElementById('replySubject').textContent = subject;
+        document.getElementById('replyModal').style.display = 'block';
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    // Close the modal when clicking outside of it
+    window.onclick = function(event) {
+        if (event.target.className === 'modal') {
+            event.target.style.display = 'none';
+        }
+    }
+
+    // Display success or error message if present in URL parameters
+    window.onload = function() {
+        var urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('replySuccess') === 'true') {
+            alert('Reply sent successfully!');
+        } else if (urlParams.get('replyError') === 'true') {
+            alert('Failed to send reply. Please try again.');
+        }
+    }
+
+    // Dark mode toggle
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const body = document.body;
+
+    darkModeToggle.addEventListener('click', () => {
+        body.classList.toggle('dark-mode');
+        const isDarkMode = body.classList.contains('dark-mode');
+        darkModeToggle.innerHTML = isDarkMode ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+    });
+</script>
+</body>
+</html>

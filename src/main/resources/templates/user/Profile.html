@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - SFMS</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --background-color: #ecf0f1;
+            --text-color: #34495e;
+            --success-color: #2ecc71;
+            --error-color: #e74c3c;
+            --border-radius: 10px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: #ffffff;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-weight: 700;
+            font-size: 3rem;
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .profile-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--secondary-color);
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1e1e1;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .success-message {
+            background-color: var(--success-color);
+            color: #fff;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-weight: 600;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .profile-info {
+            background-color: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1.5rem;
+            border: 2px solid #e1e1e1;
+            transition: all 0.3s ease;
+        }
+
+        .profile-info:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-info p {
+            margin: 0.75rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .profile-info strong {
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        .profile-info span {
+            background-color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+            border: 2px solid #e1e1e1;
+            transition: all 0.3s ease;
+        }
+
+        .profile-info span:hover {
+            border-color: var(--primary-color);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.5rem;
+                margin: 1rem;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .edit-icon {
+            cursor: pointer;
+            color: var(--primary-color);
+            margin-left: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .edit-icon:hover {
+            color: var(--accent-color);
+            transform: scale(1.2);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>User Profile</h1>
+    <div class="profile-form">
+        <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+
+        <!-- View Mode -->
+        <div th:if="${editMode == false}">
+            <div class="profile-info">
+                <p>
+                    <strong>Full Name:</strong>
+                    <span th:text="${user.fullName}"></span>
+                    <i class="fas fa-pencil-alt edit-icon" onclick="enableEdit('fullName')"></i>
+                </p>
+                <p>
+                    <strong>Email:</strong>
+                    <span th:text="${user.email}"></span>
+                </p>
+                <p>
+                    <strong>Phone Number:</strong>
+                    <span th:text="${user.phoneNumber}"></span>
+                    <i class="fas fa-pencil-alt edit-icon" onclick="enableEdit('phoneNumber')"></i>
+                </p>
+            </div>
+            <div class="button-group">
+                <a th:href="@{/user/Profile/edit}">
+                    <button type="button">
+                        <i class="fas fa-user-edit"></i> Edit Profile
+                    </button>
+                </a>
+                <a th:href="@{/user/features/UserDashBoard}">
+                    <button type="button" style="background-color: var(--secondary-color);">
+                        <i class="fas fa-tachometer-alt"></i> Back to Dashboard
+                    </button>
+                </a>
+            </div>
+        </div>
+
+        <!-- Edit Mode -->
+        <form th:if="${editMode == true}" th:action="@{/user/Profile/update}" method="post" th:object="${user}">
+            <div class="form-group">
+                <label for="fullName">Full Name:</label>
+                <input type="text" id="fullName" name="fullName" th:field="*{fullName}" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" th:field="*{email}" readonly>
+            </div>
+            <div class="form-group">
+                <label for="phoneNumber">Phone Number:</label>
+                <input type="text" id="phoneNumber" name="phoneNumber" th:field="*{phoneNumber}">
+            </div>
+            <div class="form-group">
+                <label for="password">New Password (leave blank to keep current):</label>
+                <input type="password" id="password" name="password">
+            </div>
+            <div class="button-group">
+                <button type="submit">
+                    <i class="fas fa-save"></i> Update Profile
+                </button>
+                <a th:href="@{/user/Profile}">
+                    <button type="button" style="background-color: var(--accent-color);">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function enableEdit(field) {
+        const span = document.querySelector(`span:has(+ i[onclick="enableEdit('${field}')"])`);
+        const currentValue = span.textContent;
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = currentValue;
+        input.style.width = '100%';
+        input.style.padding = '0.5rem';
+        input.style.border = '2px solid var(--primary-color)';
+        input.style.borderRadius = 'var(--border-radius)';
+
+        span.parentNode.replaceChild(input, span);
+        input.focus();
+
+        input.addEventListener('blur', function() {
+            const newSpan = document.createElement('span');
+            newSpan.textContent = this.value;
+            this.parentNode.replaceChild(newSpan, this);
+        });
+
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                this.blur();
+            }
+        });
+    }
+</script>
+</body>
+</html>

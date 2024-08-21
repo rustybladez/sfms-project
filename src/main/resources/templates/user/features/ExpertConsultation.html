@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expert Consultants</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+        --primary-color: #4CAF50;
+        --secondary-color: #45a049;
+        --text-color: #333;
+        --bg-color: #f4f4f4;
+        --card-bg: #fff;
+        --shadow: 0 2px 5px rgba(0,0,0,0.1);
+        --navbar-bg: #333;
+        --navbar-text: #fff;
+    }
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        transition: background-color 0.3s, color 0.3s;
+    }
+    body.dark-mode {
+        --bg-color: #1a1a1a;
+        --text-color: #f4f4f4;
+        --card-bg: #2c2c2c;
+        --navbar-bg: #000;
+        --navbar-text: #fff;
+    }
+    .navbar {
+        background-color: var(--navbar-bg);
+        color: var(--navbar-text);
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .navbar-brand {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+    .navbar-actions {
+        display: flex;
+        gap: 1rem;
+    }
+    .btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    .btn-primary {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    .btn-primary:hover {
+        background-color: var(--secondary-color);
+    }
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    h1 {
+        text-align: center;
+        color: var(--primary-color);
+        margin-bottom: 2rem;
+    }
+    .consultant-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+    }
+    .consultant-card {
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        transition: transform 0.3s ease;
+        cursor: pointer;
+        text-align: center;
+        padding: 20px;
+    }
+    .consultant-card:hover {
+        transform: translateY(-5px);
+    }
+    .consultant-image {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 15px;
+    }
+    .consultant-name {
+        font-size: 1.2em;
+        font-weight: bold;
+        margin: 0 0 10px 0;
+    }
+    .consultant-specialization {
+        font-style: italic;
+        color: #666;
+    }
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+        background-color: var(--card-bg);
+        margin: 5% auto;
+        padding: 20px;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 600px;
+        box-shadow: var(--shadow);
+    }
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .close:hover {
+        color: #000;
+    }
+    .contact-btn {
+        display: inline-block;
+        background-color: var(--primary-color);
+        color: white;
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+        margin-top: 15px;
+    }
+    .contact-form {
+        display: grid;
+        gap: 15px;
+    }
+    .contact-form input,
+    .contact-form textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+    }
+    .contact-form button {
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    #imagePreview {
+        max-width: 100%;
+        margin-top: 10px;
+    }
+    .consultant-details {
+        display: flex;
+        align-items: flex-start;
+        gap: 20px;
+    }
+    .consultant-details-image {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .consultant-details-info {
+        flex: 1;
+    }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-brand">
+    <i class="fas fa-user-md"></i> Expert Consultants
+  </div>
+  <div class="navbar-actions">
+    <button class="btn btn-primary" onclick="location.href='/user/features/UserDashBoard'">
+      <i class="fas fa-home"></i>
+    </button>
+    <button class="btn btn-primary" onclick="toggleDarkMode()">
+      <i class="fas fa-moon"></i>
+    </button>
+  </div>
+</nav>
+
+<div class="container">
+  <h1><i class="fas fa-users"></i> Our Expert Consultants</h1>
+  <div class="consultant-grid" id="consultantGrid">
+    <!-- Consultant cards will be dynamically inserted here -->
+  </div>
+</div>
+
+<div id="consultantModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <div id="consultantDetails" class="consultant-details"></div>
+    <a href="#" class="contact-btn" onclick="showContactForm()">
+      <i class="fas fa-envelope"></i> Contact
+    </a>
+  </div>
+</div>
+
+<div id="contactModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2><i class="fas fa-paper-plane"></i> Contact Consultant</h2>
+    <form id="contactForm" class="contact-form">
+      <input type="email" id="userEmail" placeholder="Your Email" required>
+      <input type="text" id="subject" placeholder="Subject" required>
+      <textarea id="message" placeholder="Your Message" rows="4" required></textarea>
+      <input type="file" id="attachment" accept="image/*">
+      <img id="imagePreview" src="" alt="Image preview" style="display: none;">
+      <button type="submit"><i class="fas fa-send"></i> Send Message</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  const consultantGrid = document.getElementById('consultantGrid');
+  const consultantModal = document.getElementById('consultantModal');
+  const contactModal = document.getElementById('contactModal');
+  const closeBtns = document.getElementsByClassName('close');
+
+  function toggleDarkMode() {
+      document.body.classList.toggle('dark-mode');
+  }
+
+  // Fetch consultants from the backend
+  fetch('/api/consultants')
+      .then(response => response.json())
+      .then(consultants => {
+          consultants.forEach(consultant => {
+              const card = document.createElement('div');
+              card.className = 'consultant-card';
+              card.innerHTML = `
+                  <img src="${consultant.profileImageBase64 || '/api/placeholder/300/300'}" class="consultant-image" alt="${consultant.name}">
+                  <h2 class="consultant-name">${consultant.name}</h2>
+                  <p class="consultant-specialization">${consultant.specialization}</p>
+              `;
+              card.onclick = () => showConsultantDetails(consultant.id);
+              consultantGrid.appendChild(card);
+          });
+      })
+      .catch(error => console.error('Error fetching consultants:', error));
+
+  function showConsultantDetails(id) {
+      fetch(`/api/consultants/${id}`)
+          .then(response => response.json())
+          .then(consultant => {
+              const detailsDiv = document.getElementById('consultantDetails');
+              detailsDiv.innerHTML = `
+                  <img src="${consultant.profileImageBase64 || '/api/placeholder/300/300'}" alt="${consultant.name}" class="consultant-details-image">
+                  <div class="consultant-details-info">
+                      <h2>${consultant.name}</h2>
+                      <p><strong><i class="fas fa-stethoscope"></i> Specialization:</strong> ${consultant.specialization}</p>
+                      <p><strong><i class="fas fa-clock"></i> Availability:</strong> ${consultant.availabilityStart} - ${consultant.availabilityEnd}</p>
+                      <p><strong><i class="fas fa-envelope"></i> Email:</strong> ${consultant.email}</p>
+                      <p><strong><i class="fas fa-info-circle"></i> Bio:</strong> ${consultant.bio}</p>
+                  </div>
+              `;
+              consultantModal.style.display = 'block';
+          })
+          .catch(error => console.error('Error fetching consultant details:', error));
+  }
+
+  function showContactForm() {
+      consultantModal.style.display = 'none';
+      contactModal.style.display = 'block';
+  }
+
+  // Close modal when clicking on <span> (x)
+  for (let closeBtn of closeBtns) {
+      closeBtn.onclick = function() {
+          consultantModal.style.display = 'none';
+          contactModal.style.display = 'none';
+      }
+  }
+
+  // Close modal when clicking outside of it
+  window.onclick = function(event) {
+      if (event.target == consultantModal) {
+          consultantModal.style.display = 'none';
+      }
+      if (event.target == contactModal) {
+          contactModal.style.display = 'none';
+      }
+  }
+
+  // Handle file input for image preview
+  document.getElementById('attachment').onchange = function(event) {
+      const file = event.target.files[0];
+      if (file) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+              const preview = document.getElementById('imagePreview');
+              preview.src = e.target.result;
+              preview.style.display = 'block';
+          }
+          reader.readAsDataURL(file);
+      }
+  };
+
+  // Handle form submission (replace with actual submission logic)
+  document.getElementById('contactForm').onsubmit = function(e) {
+      e.preventDefault();
+      // Here you would typically send the form data to your server
+      alert('Message sent successfully!');
+      contactModal.style.display = 'none';
+      this.reset();
+      document.getElementById('imagePreview').style.display = 'none';
+  };
+</script>
+</body>
+</html>

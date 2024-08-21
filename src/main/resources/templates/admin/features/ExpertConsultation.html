@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expert Consultant Management</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #45a049;
+            --accent-color: #FFA500;
+            --text-color: #333;
+            --bg-color: #f4f4f4;
+            --card-bg: #fff;
+            --input-bg: #fff;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .dark-mode {
+            --primary-color: #45a049;
+            --secondary-color: #4CAF50;
+            --accent-color: #FFD700;
+            --text-color: #f0f0f0;
+            --bg-color: #1a1a1a;
+            --card-bg: #2c2c2c;
+            --input-bg: #3a3a3a;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .navbar {
+            background-color: var(--primary-color);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+        }
+        .navbar-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+        }
+        .navbar-actions {
+            display: flex;
+            gap: 1rem;
+        }
+        .btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-radius: 4px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn:hover {
+            background-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 1rem;
+        }
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+        }
+        .consultants-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .consultant-card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 1rem;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .consultant-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        .consultant-image {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 1rem;
+            border: 3px solid var(--accent-color);
+        }
+        .consultant-actions {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 1rem;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            animation: fadeIn 0.3s;
+        }
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            width: 90%;
+            max-width: 600px;
+            animation: slideIn 0.3s;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        .close:hover {
+            color: var(--text-color);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+        }
+        .notification.success {
+            background-color: #4CAF50;
+        }
+        .notification.error {
+            background-color: #f44336;
+        }
+        .home-btn {
+            color: white;
+            font-size: 1.5rem;
+            transition: color 0.3s;
+        }
+        .home-btn:hover {
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="navbar-title">
+        <i class="fas fa-user-md"></i> Expert Consultant Management
+    </div>
+    <div class="navbar-actions">
+        <button class="btn" onclick="toggleDarkMode()">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
+</nav>
+<div class="container">
+    <div class="card">
+        <h2><i class="fas fa-user-plus"></i> Add New Consultant</h2>
+        <form id="consultantForm" class="form-grid">
+            <div class="form-group">
+                <label for="name"><i class="fas fa-user"></i> Name</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="specialization"><i class="fas fa-stethoscope"></i> Specialization</label>
+                <input type="text" id="specialization" name="specialization" required>
+            </div>
+            <div class="form-group">
+                <label for="email"><i class="fas fa-envelope"></i> Email</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="phone"><i class="fas fa-phone"></i> Phone</label>
+                <input type="tel" id="phone" name="phone" required>
+            </div>
+            <div class="form-group">
+                <label for="availabilityStart"><i class="fas fa-clock"></i> Availability Start</label>
+                <input type="time" id="availabilityStart" name="availabilityStart" required>
+            </div>
+            <div class="form-group">
+                <label for="availabilityEnd"><i class="fas fa-clock"></i> Availability End</label>
+                <input type="time" id="availabilityEnd" name="availabilityEnd" required>
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+                <label for="bio"><i class="fas fa-info-circle"></i> Bio</label>
+                <textarea id="bio" name="bio" rows="4" required></textarea>
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+                <label for="profileImage"><i class="fas fa-image"></i> Profile Image</label>
+                <input type="file" id="profileImage" name="profileImage" accept="image/*" required>
+            </div>
+            <button type="submit" class="btn" style="grid-column: span 2;">
+                <i class="fas fa-plus-circle"></i> Add Consultant
+            </button>
+        </form>
+    </div>
+
+    <div class="consultants-grid" id="consultantsGrid">
+        <!-- Consultant cards will be inserted here -->
+    </div>
+</div>
+
+<div id="viewModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <div id="viewModalContent"></div>
+    </div>
+</div>
+
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <form id="editForm" class="form-grid">
+            <!-- Edit form fields will be dynamically inserted here -->
+        </form>
+    </div>
+</div>
+<script>
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
+        localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+    }
+
+    // Check for saved dark mode preference
+    if (localStorage.getItem('darkMode') === 'true') {
+        document.body.classList.add('dark-mode');
+    }
+
+ document.getElementById('consultantForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+
+    fetch('/api/consultants', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(consultant => {
+        showNotification('Consultant added successfully', 'success');
+
+        // Create a new consultant card immediately
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const imageBase64 = e.target.result.split(',')[1]; // Remove the "data:image/jpeg;base64," part
+            const card = createConsultantCard({
+                ...consultant,
+                profileImageBase64: imageBase64
+            });
+            document.getElementById('consultantsGrid').insertAdjacentHTML('afterbegin', card);
+        };
+        reader.readAsDataURL(formData.get('profileImage'));
+
+        this.reset();
+    })
+    .catch(error => {
+        console.error('Error adding consultant:', error);
+        showNotification('Error adding consultant', 'error');
+    });
+});
+
+function createConsultantCard(consultant) {
+    const imageUrl = consultant.profileImageBase64
+        ? `data:image/jpeg;base64,${consultant.profileImageBase64}`
+        : 'https://via.placeholder.com/100';
+    return `
+        <div class="consultant-card">
+            <img src="${imageUrl}" class="consultant-image">
+            <h3>${consultant.name}</h3>
+            <p>${consultant.specialization}</p>
+            <p><i class="fas fa-envelope"></i> ${consultant.email}</p>
+            <div class="consultant-actions">
+                <button class="btn" onclick="viewConsultant(${consultant.id})"><i class="fas fa-eye"></i> View</button>
+                <button class="btn" onclick="editConsultant(${consultant.id})"><i class="fas fa-edit"></i> Edit</button>
+                <button class="btn" onclick="deleteConsultant(${consultant.id})"><i class="fas fa-trash"></i> Delete</button>
+            </div>
+        </div>
+    `;
+}
+function loadConsultants() {
+    fetch('/api/consultants')
+        .then(response => response.json())
+        .then(consultants => {
+            const consultantsGrid = document.getElementById('consultantsGrid');
+            consultantsGrid.innerHTML = '';
+            consultants.forEach(consultant => {
+                const imageUrl = consultant.profileImageBase64
+                    ? `data:image/jpeg;base64,${consultant.profileImageBase64}`
+                    : 'https://via.placeholder.com/100';
+                const card = `
+                    <div class="consultant-card">
+                        <img src="${imageUrl}" class="consultant-image">
+                        <h3>${consultant.name}</h3>
+                        <p><i class="fas fa-stethoscope"></i> ${consultant.specialization}</p>
+                        <p><i class="fas fa-envelope"></i> ${consultant.email}</p>
+                        <div class="consultant-actions">
+                            <button class="btn" onclick="viewConsultant(${consultant.id})"><i class="fas fa-eye"></i> View</button>
+                            <button class="btn" onclick="editConsultant(${consultant.id})"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn" onclick="deleteConsultant(${consultant.id})"><i class="fas fa-trash"></i> Delete</button>
+                        </div>
+                    </div>
+                `;
+                consultantsGrid.insertAdjacentHTML('beforeend', card);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading consultants:', error);
+            showNotification('Error loading consultants', 'error');
+        });
+}
+    function viewConsultant(id) {
+        fetch(`/api/consultants/${id}`)
+            .then(response => response.json())
+            .then(consultant => {
+                const modalContent = document.getElementById('viewModalContent');
+                modalContent.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <img src="${consultant.profileImageBase64 || 'https://via.placeholder.com/100'}" alt="${consultant.name}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
+                        <h2>${consultant.name}</h2>
+                    </div>
+                    <p><i class="fas fa-stethoscope"></i> <strong>Specialization:</strong> ${consultant.specialization}</p>
+                    <p><i class="fas fa-envelope"></i> <strong>Email:</strong> ${consultant.email}</p>
+                    <p><i class="fas fa-phone"></i> <strong>Phone:</strong> ${consultant.phone}</p>
+                    <p><i class="fas fa-clock"></i> <strong>Availability:</strong> ${consultant.availabilityStart} - ${consultant.availabilityEnd}</p>
+                    <p><i class="fas fa-info-circle"></i> <strong>Bio:</strong> ${consultant.bio}</p>
+                `;
+                document.getElementById('viewModal').style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error viewing consultant:', error);
+                showNotification('Error viewing consultant details', 'error');
+            });
+    }
+
+    function editConsultant(id) {
+        fetch(`/api/consultants/${id}`)
+            .then(response => response.json())
+            .then(consultant => {
+                const editForm = document.getElementById('editForm');
+                editForm.innerHTML = `
+                    <input type="hidden" name="id" value="${consultant.id}">
+                    <div class="form-group">
+                        <label for="editName"><i class="fas fa-user"></i> Name</label>
+                        <input type="text" id="editName" name="name" value="${consultant.name}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editSpecialization"><i class="fas fa-stethoscope"></i> Specialization</label>
+                        <input type="text" id="editSpecialization" name="specialization" value="${consultant.specialization}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editEmail"><i class="fas fa-envelope"></i> Email</label>
+                        <input type="email" id="editEmail" name="email" value="${consultant.email}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editPhone"><i class="fas fa-phone"></i> Phone</label>
+                        <input type="tel" id="editPhone" name="phone" value="${consultant.phone}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editAvailabilityStart"><i class="fas fa-clock"></i> Availability Start</label>
+                        <input type="time" id="editAvailabilityStart" name="availabilityStart" value="${consultant.availabilityStart}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editAvailabilityEnd"><i class="fas fa-clock"></i> Availability End</label>
+                        <input type="time" id="editAvailabilityEnd" name="availabilityEnd" value="${consultant.availabilityEnd}" required>
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label for="editBio"><i class="fas fa-info-circle"></i> Bio</label>
+                        <textarea id="editBio" name="bio" rows="4" required>${consultant.bio}</textarea>
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label for="editProfileImage"><i class="fas fa-image"></i> Profile Image</label>
+                        <input type="file" id="editProfileImage" name="profileImage" accept="image/*">
+                    </div>
+                    <button type="submit" class="btn" style="grid-column: span 2;">
+                        <i class="fas fa-save"></i> Update Consultant
+                    </button>
+                `;
+                editForm.onsubmit = function(e) {
+                    e.preventDefault();
+                    const formData = new FormData(editForm);
+
+                    fetch(`/api/consultants/${id}`, {
+                        method: 'PUT',
+                        body: formData
+                    })
+                    .then(() => {
+                        showNotification('Consultant updated successfully', 'success');
+                        loadConsultants();
+                        document.getElementById('editModal').style.display = 'none';
+                    })
+                    .catch(error => {
+                        console.error('Error updating consultant:', error);
+                        showNotification('Error updating consultant', 'error');
+                    });
+                };
+                document.getElementById('editModal').style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error loading consultant for edit:', error);
+                showNotification('Error loading consultant details', 'error');
+            });
+    }
+
+    function deleteConsultant(id) {
+        if (confirm('Are you sure you want to delete this consultant?')) {
+            fetch(`/api/consultants/${id}`, {
+                method: 'DELETE'
+            })
+            .then(() => {
+                showNotification('Consultant deleted successfully', 'success');
+                loadConsultants();
+            })
+            .catch(error => {
+                console.error('Error deleting consultant:', error);
+                showNotification('Error deleting consultant', 'error');
+            });
+        }
+    }
+
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.textContent = message;
+        notification.className = `notification ${type}`;
+        document.body.appendChild(notification);
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+
+    // Close modal when clicking on <span> (x)
+    document.querySelectorAll('.close').forEach(closeBtn => {
+        closeBtn.onclick = function() {
+            this.closest('.modal').style.display = 'none';
+        }
+    });
+
+    // Close modal when clicking outside of it
+    window.onclick = function(event) {
+        if (event.target.className === 'modal') {
+            event.target.style.display = 'none';
+        }
+    }
+
+    // Load consultants when the page loads
+    loadConsultants();
+</script>
+</body>
+</html>

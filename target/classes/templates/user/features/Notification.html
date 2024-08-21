@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SFMS - Notifications Center</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f4f4f4;
+            --text-color: #333;
+            --card-bg: #fff;
+            --header-bg: #007bff;
+            --header-text: #fff;
+            --btn-primary: #007bff;
+            --btn-info: #17a2b8;
+            --btn-text: #fff;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark-mode {
+            --bg-color: #1a1a1a;
+            --text-color: #f4f4f4;
+            --card-bg: #2c2c2c;
+            --header-bg: #0056b3;
+            --header-text: #fff;
+            --btn-primary: #0056b3;
+            --btn-info: #138496;
+            --btn-text: #fff;
+            --card-shadow: 0 4px 6px rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: var(--header-bg);
+            color: var(--header-text);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        .header-title {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        h1, h2 {
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background-color: var(--btn-primary);
+            color: var(--btn-text);
+        }
+
+        .btn-info {
+            background-color: var(--btn-info);
+            color: var(--btn-text);
+        }
+
+        .notification-filters {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .notification-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s, box-shadow 0.3s;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: var(--btn-primary);
+        }
+
+        .card-subtitle {
+            color: #6c757d;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .card-text {
+            margin-bottom: 1rem;
+            max-height: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+        }
+
+        .badge {
+            padding: 0.25em 0.6em;
+            border-radius: 0.25rem;
+            font-size: 0.75em;
+        }
+
+        .badge-primary {
+            background-color: var(--btn-primary);
+            color: var(--btn-text);
+        }
+
+        .badge-secondary {
+            background-color: #6c757d;
+            color: #fff;
+        }
+
+        #darkModeToggle {
+            background: none;
+            border: none;
+            color: var(--header-text);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+
+        .alert-success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .alert-danger {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        .alert-info {
+            color: #0c5460;
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+        }
+
+        .card-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .notification-filters {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .header-title {
+                position: static;
+                transform: none;
+                text-align: center;
+                margin-bottom: 10px;
+            }
+
+            header {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <a href="/user/features/UserDashBoard" class="btn btn-primary">
+        <i class="fas fa-home"></i> Home
+    </a>
+    <h1 class="header-title">Notifications Center</h1>
+    <button id="darkModeToggle">
+        <i class="fas fa-moon"></i>
+    </button>
+</header>
+
+<div class="container">
+    <!-- Success and Error Messages -->
+    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <!--Notification filters-->
+    <div class="notification-filters">
+        <a th:href="@{/user/features/Notification/all}" class="btn btn-info" th:classappend="${type == 'all'} ? 'active' : ''">All</a>
+        <a th:href="@{/user/features/Notification/general}" class="btn btn-info" th:classappend="${type == 'general'} ? 'active' : ''">General</a>
+        <a th:href="@{/user/features/Notification/weather}" class="btn btn-info" th:classappend="${type == 'weather'} ? 'active' : ''">Weather</a>
+        <a th:href="@{/user/features/Notification/pest}" class="btn btn-info" th:classappend="${type == 'pest'} ? 'active' : ''">Pest</a>
+        <a th:href="@{/user/features/Notification/market}" class="btn btn-info" th:classappend="${type == 'market'} ? 'active' : ''">Market</a>
+        <a th:href="@{/user/features/Notification/unread}" class="btn btn-info" th:classappend="${type == 'unread'} ? 'active' : ''">Unread</a>
+    </div>
+
+    <!--Current notifications-->
+    <div class="section">
+        <h2>Notifications</h2>
+        <div id="notifications-list" class="notification-grid">
+            <div th:if="${notifications.isEmpty()}" class="alert alert-info">
+                No notifications found for this category.
+            </div>
+            <div class="card" th:each="notif : ${notifications}">
+                <div class="card-body">
+                    <h5 class="card-title" th:text="${notif.title}"></h5>
+                    <h6 class="card-subtitle">
+                        <i class="fas fa-calendar-alt"></i> Posted: <span th:text="${#temporals.format(notif.postedDate, 'yyyy-MM-dd')}"></span><br>
+                        <i class="fas fa-clock"></i> Expires: <span th:text="${#temporals.format(notif.expiryDate, 'yyyy-MM-dd')}"></span>
+                    </h6>
+                    <p class="card-text" th:text="${notif.content}"></p>
+                    <div class="card-actions">
+                        <a href="#" class="btn btn-info view-notification" th:data-id="${notif.id}">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                        <form th:action="@{/user/features/Notification/markAsRead/{id}(id=${notif.id})}" method="post">
+                            <input type="hidden" name="type" th:value="${type}">
+                            <button type="submit" class="btn btn-primary" th:if="${!notif.readOrNot}">
+                                <i class="fas fa-check"></i> Mark as Read
+                            </button>
+                            <span class="badge badge-secondary" th:if="${notif.readOrNot}">
+                                <i class="fas fa-check-double"></i> Read
+                            </span>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for viewing full notification -->
+<div id="notificationModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 id="modalTitle"></h2>
+        <p id="modalContent"></p>
+        <p id="modalDates"></p>
+    </div>
+</div>
+
+<script>
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const body = document.body;
+
+    darkModeToggle.addEventListener('click', () => {
+        body.classList.toggle('dark-mode');
+        const icon = darkModeToggle.querySelector('i');
+        if (body.classList.contains('dark-mode')) {
+            icon.classList.remove('fa-moon');
+            icon.classList.add('fa-sun');
+        } else {
+            icon.classList.remove('fa-sun');
+            icon.classList.add('fa-moon');
+        }
+    });
+
+    // Function to open the modal and fetch notification details
+    function openNotificationModal(id) {
+        fetch(`/user/features/Notification/view/${id}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('modalTitle').textContent = data.title;
+                document.getElementById('modalContent').textContent = data.content;
+                document.getElementById('modalDates').innerHTML = `
+                    <strong>Posted:</strong> ${new Date(data.postedDate).toLocaleDateString()} <br>
+                    <strong>Expires:</strong> ${new Date(data.expiryDate).toLocaleDateString()}
+                `;
+                document.getElementById('notificationModal').style.display = 'block';
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    // Close the modal when clicking on <span> (x)
+    document.querySelector('.close').onclick = function() {
+        document.getElementById('notificationModal').style.display = 'none';
+    }
+
+    // Close the modal when clicking outside of it
+    window.onclick = function(event) {
+        if (event.target == document.getElementById('notificationModal')) {
+            document.getElementById('notificationModal').style.display = 'none';
+        }
+    }
+
+    // Attach click event to all "View" buttons
+    document.querySelectorAll('.view-notification').forEach(button => {
+        button.onclick = function(e) {
+            e.preventDefault();
+            const notificationId = this.getAttribute('data-id');
+            openNotificationModal(notificationId);
+        }
+    });
+</script>
+</body>
+</html>

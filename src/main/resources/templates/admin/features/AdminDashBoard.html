@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="https://www.thymeleaf.com">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - SFMS</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #45a049;
+            --background-color: #f0f4f7;
+            --text-color: #333;
+            --sidebar-width: 250px;
+            --card-bg: #fff;
+            --navbar-bg: #fff;
+            --dropdown-bg: #fff;
+            --hover-bg: #e0e0e0;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .dark-mode {
+            --primary-color: #66bb6a;
+            --secondary-color: #4caf50;
+            --background-color: #1a1a1a;
+            --text-color: #f0f0f0;
+            --card-bg: #2c2c2c;
+            --navbar-bg: #2c2c2c;
+            --dropdown-bg: #2c2c2c;
+            --hover-bg: #3a3a3a;
+            --shadow-color: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            padding-top: 60px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .navbar {
+            background-color: var(--navbar-bg);
+            box-shadow: 0 2px 4px var(--shadow-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            transition: background-color 0.3s;
+        }
+
+        .navbar-left, .navbar-right {
+            display: flex;
+            align-items: center;
+        }
+
+        .menu-toggle {
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            transition: transform 0.3s ease;
+            z-index: 1001;
+        }
+
+        .menu-toggle:hover {
+            color: var(--secondary-color);
+        }
+
+        .search-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            margin: 0 1rem;
+        }
+
+        .search-box {
+            padding: 0.4rem;
+            border-radius: 20px;
+            border: 1px solid #ddd;
+            width: 50%;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+        }
+
+        .search-box:focus {
+            width: 60%;
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .search-btn {
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-left: 0.5rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .search-btn:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .navbar-right {
+            gap: 1rem;
+        }
+
+        .notification, .profile, .dark-mode-toggle {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .notification:hover, .profile:hover, .dark-mode-toggle:hover {
+            color: var(--secondary-color);
+        }
+
+        .profile-dropdown {
+            position: relative;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: var(--dropdown-bg);
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px var(--shadow-color);
+            z-index: 1;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .dropdown-content a {
+            color: var(--text-color);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.3s ease;
+        }
+
+        .dropdown-content a:hover {
+            background-color: var(--hover-bg);
+        }
+
+        .show {
+            display: block;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: -250px;
+            top: 0;
+            width: var(--sidebar-width);
+            height: 100%;
+            background-color: var(--card-bg);
+            transition: left 0.3s ease-in-out, background-color 0.3s;
+            z-index: 999;
+            box-shadow: 2px 0 5px var(--shadow-color);
+            padding-top: 60px;
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        .sidebar-menu {
+            list-style-type: none;
+            padding: 1rem;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 0.8rem;
+        }
+
+        .sidebar-menu a {
+            color: var(--text-color);
+            text-decoration: none;
+            transition: color 0.3s ease;
+            display: block;
+            padding: 0.5rem;
+            border-radius: 5px;
+        }
+
+        .sidebar-menu a:hover {
+            color: var(--primary-color);
+            background-color: var(--hover-bg);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-color);
+        }
+
+        .dashboard {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            margin-top: 20px;
+        }
+
+        .dashboard-item {
+            background-color: var(--card-bg);
+            padding: 1.25rem;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px var(--shadow-color);
+            flex: 0 0 calc(33.333% - 1rem);
+            max-width: calc(33.333% - 1rem);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .dashboard-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px var(--shadow-color);
+        }
+
+        .dashboard-item h2 {
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+            font-size: 1.25rem;
+        }
+
+        .dashboard-item p {
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .total-count-container {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 1rem 0;
+            transition: all 0.3s ease;
+        }
+
+        .total-count {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .dashboard-item:hover .total-count-container {
+            transform: scale(1.1);
+        }
+
+        .welcome-message {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-item {
+                flex: 0 0 calc(50% - 1rem);
+                max-width: calc(50% - 1rem);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .search-container {
+                display: none;
+            }
+
+            .dashboard {
+                padding: 1rem;
+            }
+
+            .dashboard-item {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light fixed-top">
+    <div class="navbar-left">
+        <div class="menu-toggle" id="menu-toggle">
+            <i class="fas fa-bars"></i>
+        </div>
+    </div>
+    <div class="search-container">
+        <input type="text" class="search-box" placeholder="Search...">
+        <button class="search-btn">
+            <i class="fas fa-search"></i>
+        </button>
+    </div>
+    <div class="navbar-right">
+        <a th:href="@{/admin/features/notifications}" class="notification" id="notification">
+            <i class="fas fa-bell"></i>
+        </a>
+        <div class="profile-dropdown">
+            <span class="profile" id="profile">
+                <i class="fas fa-user-circle"></i>
+            </span>
+            <div class="dropdown-content" id="profileDropdown">
+                <a th:href="@{/admin/features/MyProfile}">
+                    <i class="fas fa-user"></i> My Profile
+                </a>
+                <a class="dropdown-item" th:href="@{/admin/AdminLogin}">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+        <span class="dark-mode-toggle" id="darkModeToggle">
+            <i class="fas fa-moon"></i>
+        </span>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <h2 th:text="${welcomeMessage}" class="welcome-message"></h2>
+</div>
+<div class="sidebar" id="sidebar">
+    <span class="close-btn" id="close-btn">&times;</span>
+    <ul class="sidebar-menu">
+        <li><a href="#overview"><i class="fas fa-chart-line"></i> Overview</a></li>
+        <li><a th:href="@{/admin/features/CropSectionManagement}"><i class="fas fa-seedling"></i> Plant Management Section</a></li>
+        <li><a th:href="@{/admin/features/SeasonalPlant}"><i class="fas fa-seedling"></i> Seasonal Plant  Section</a></li>
+        <li><a th:href="@{/admin/features/AdminListBoard}"><i class="fa-regular fa-user"></i> Existing Admin List</a></li>
+        <li><a th:href="@{/admin/features/MessageView}"><i class="fas fa-envelope"></i> Message Checking</a></li>
+        <li><a th:href="@{/admin/features/ExpertConsultation}"><i class="fas fa-user-md"></i> Expert Consultation</a></li>
+        <li><a th:href="@{/admin/features/CheckTotalUser}"><i class="fas fa-users"></i>User list</a></li>
+    </ul>
+</div>
+
+<div class="dashboard">
+    <div class="dashboard-item" id="crops">
+        <h2><i class="fas fa-seedling"></i> Plant</h2>
+        <p>In system total plant for service</p>
+        <div class="total-count-container">
+            <p class="total-count" id="plantCount">0</p>
+        </div>
+    </div>
+
+    <div class="dashboard-item" id="seasonalPlants">
+        <h2><i class="fa-solid fa-tree"></i> Seasonal Plants</h2>
+        <p>Total stored seasonal plants for service</p>
+        <div class="total-count-container">
+            <p class="total-count" id="seasonalPlantCount">0</p>
+        </div>
+    </div>
+
+    <div id="expert" class="dashboard-item">
+        <h2><i class="fas fa-user-md"></i> Consultants</h2>
+        <p>Total expert Consultants</p>
+        <div class="total-count-container">
+            <p class="total-count" id="consultantCount">0</p>
+        </div>
+    </div>
+
+    <div class="dashboard-item" id="adminCard">
+        <h2><i class="fa-regular fa-user"></i> Admin</h2>
+        <p>In system total Admin</p>
+        <div class="total-count-container">
+            <p class="total-count" id="adminCount">0</p>
+        </div>
+    </div>
+
+    <div class="dashboard-item" id="update">
+        <h2><i class="fas fa-users"></i> User</h2>
+        <p>In System Total Registered User</p>
+        <div class="total-count-container">
+            <p class="total-count" th:text="${totalUserCount}">0</p>
+        </div>
+    </div>
+
+    <div class="dashboard-item" id="messages">
+        <h2><i class="fas fa-envelope"></i> Message</h2>
+        <p>In system total message from user</p>
+        <div class="total-count-container">
+            <p class="total-count" id="messageCount">0</p>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const closeBtn = document.getElementById('close-btn');
+        const profile = document.getElementById('profile');
+        const profileDropdown = document.getElementById('profileDropdown');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+
+        function toggleSidebar(e) {
+            e.stopPropagation();
+            sidebar.classList.toggle('active');
+        }
+
+        menuToggle.addEventListener('click', toggleSidebar);
+        closeBtn.addEventListener('click', toggleSidebar);
+
+        // Close sidebar when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+                sidebar.classList.remove('active');
+            }
+            if (!profile.contains(e.target) && !profileDropdown.contains(e.target)) {
+                profileDropdown.classList.remove('show');
+            }
+        });
+
+        // Prevent sidebar from closing when clicking inside it
+        sidebar.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // Toggle profile dropdown
+        profile.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileDropdown.classList.toggle('show');
+        });
+
+        // Add hover effect to dashboard items
+        const dashboardItems = document.querySelectorAll('.dashboard-item');
+        dashboardItems.forEach(item => {
+            item.addEventListener('mouseenter', () => {
+                item.style.transform = 'scale(1.05)';
+            });
+            item.addEventListener('mouseleave', () => {
+                item.style.transform = 'scale(1)';
+            });
+        });
+
+        // Dark mode toggle functionality
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDarkMode);
+            updateDarkModeIcon(isDarkMode);
+        }
+
+        function updateDarkModeIcon(isDarkMode) {
+            const icon = darkModeToggle.querySelector('i');
+            if (isDarkMode) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        }
+
+        // Check for saved dark mode preference
+        const savedDarkMode = localStorage.getItem('darkMode');
+        if (savedDarkMode === 'true') {
+            document.body.classList.add('dark-mode');
+            updateDarkModeIcon(true);
+        }
+
+        darkModeToggle.addEventListener('click', toggleDarkMode);
+
+        // Fetch and update plant count
+        fetch('/api/plants/count')
+            .then(response => response.json())
+            .then(count => {
+                document.getElementById('plantCount').textContent = count;
+            })
+            .catch(error => {
+                console.error('Error fetching plant count:', error);
+                document.getElementById('plantCount').textContent = 'Error loading count';
+            });
+
+        // Fetch and update admin count
+        fetch('/api/admins/count')
+            .then(response => response.json())
+            .then(count => {
+                document.getElementById('adminCount').textContent = count;
+            })
+            .catch(error => {
+                console.error('Error fetching admin count:', error);
+                document.getElementById('adminCount').textContent = 'Error loading count';
+            });
+
+        // Fetch and update message count
+        fetch('/api/messages/count')
+            .then(response => response.json())
+            .then(count => {
+                document.getElementById('messageCount').textContent = count;
+            })
+            .catch(error => {
+                console.error('Error fetching message count:', error);
+                document.getElementById('messageCount').textContent = 'Error loading count';
+            });
+
+        // Fetch and update consultant count
+        fetch('/api/consultants/count')
+            .then(response => response.json())
+            .then(count => {
+                document.getElementById('consultantCount').textContent = count;
+            })
+            .catch(error => {
+                console.error('Error fetching consultant count:', error);
+                document.getElementById('consultantCount').textContent = 'Error loading count';
+            });
+
+        // New: Fetch and update seasonal plant count
+        fetch('/api/tree-profiles/seasonal/count')
+            .then(response => response.json())
+            .then(count => {
+                document.getElementById('seasonalPlantCount').textContent = count;
+            })
+            .catch(error => {
+                console.error('Error fetching seasonal plant count:', error);
+                document.getElementById('seasonalPlantCount').textContent = 'Error loading count';
+            });
+    });
+</script>
+</body>
+</html>

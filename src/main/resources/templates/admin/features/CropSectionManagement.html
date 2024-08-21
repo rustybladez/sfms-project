@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crop and Irrigation Management - SFMS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2980b9;
+            --accent-color: #e74c3c;
+            --background-color: #ecf0f1;
+            --text-color: #34495e;
+            --light-text-color: #7f8c8d;
+            --border-color: #bdc3c7;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body.dark-mode {
+            --primary-color: #2980b9;
+            --secondary-color: #3498db;
+            --accent-color: #c0392b;
+            --background-color: #2c3e50;
+            --text-color: #ecf0f1;
+            --light-text-color: #bdc3c7;
+            --border-color: #34495e;
+        }
+
+        .navbar {
+            background-color: var(--primary-color);
+            padding: 1rem;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .navbar h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .navbar-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .navbar a:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 6rem auto 2rem;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        body.dark-mode .container {
+            background-color: #34495e;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        }
+
+        h2 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--light-text-color);
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        textarea:focus,
+        select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+            outline: none;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .input-group input,
+        .input-group select {
+            flex: 1;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 2rem;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        body.dark-mode table {
+            background-color: #2c3e50;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: var(--background-color);
+        }
+
+        tr:hover {
+            background-color: var(--border-color);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 2rem;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 800px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            animation: slideIn 0.3s;
+            transition: background-color 0.3s;
+        }
+
+        body.dark-mode .modal-content {
+            background-color: #34495e;
+            border-color: #2c3e50;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: var(--accent-color);
+        }
+
+        .error-message,
+        .success-message {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            animation: slideIn 0.3s;
+        }
+
+        .error-message {
+            color: #721c24;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success-message {
+            color: #155724;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .navbar-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .navbar-links {
+                margin-top: 1rem;
+            }
+        }
+
+        .tab {
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            background-color: var(--background-color);
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .tab button {
+            background-color: inherit;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+            font-size: 16px;
+            flex-grow: 1;
+            color: var(--text-color);
+        }
+
+        .tab button:hover {
+            background-color: var(--border-color);
+        }
+
+        .tab button.active {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: bold;
+        }
+
+        .tabcontent {
+            display: none;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-top: none;
+            animation: fadeEffect 1s;
+        }
+
+        @keyframes fadeEffect {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
+
+        .modal-content {
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        #editPlantForm {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #editPlantForm button[type="submit"] {
+            align-self: flex-end;
+            margin-top: 20px;
+        }
+
+        #darkModeToggle {
+            background-color: transparent;
+            border: 2px solid white;
+            color: white;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #darkModeToggle:hover {
+            background-color: white;
+            color: var(--primary-color);
+        }
+
+        body.dark-mode #darkModeToggle {
+            border-color: var(--text-color);
+            color: var(--text-color);
+        }
+
+        body.dark-mode #darkModeToggle:hover {
+            background-color: var(--text-color);
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="navbar-content">
+        <h1><i class="fas fa-leaf"></i> Crop & Irrigation Management Section - SFMS</h1>
+        <div class="navbar-links">
+            <a href="#add-plant"><i class="fas fa-plus"></i> Add Plant</a>
+            <a href="#plant-list"><i class="fas fa-list"></i> Plant List</a>
+            <a href="/admin/features/AdminDashboard"><i class="fa-solid fa-house"></i> Home</a>
+            <button id="darkModeToggle"><i class="fas fa-moon"></i> </button>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <section id="add-plant">
+        <h2><i class="fas fa-seedling"></i> Add New Plant</h2>
+        <div id="addPlantError" class="error-message"></div>
+        <div id="addPlantSuccess" class="success-message"></div>
+        <form id="addPlantForm" enctype="multipart/form-data">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="cropType"><i class="fas fa-seedling"></i> Crop Type:</label>
+                    <input type="text" id="cropType" name="cropType" required>
+                </div>
+                <div class="form-group">
+                    <label for="cropName"><i class="fas fa-font"></i> Crop Name:</label>
+                    <input type="text" id="cropName" name="cropName" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="needDuration"><i class="fas fa-clock"></i> Need Duration:</label>
+                <div class="input-group">
+                    <input type="number" id="needDuration" name="needDuration" min="1" required>
+                    <select id="durationUnit" name="durationUnit">
+                        <option value="days">Days</option>
+                        <option value="months">Months</option>
+                        <option value="years">Years</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="requiredPH"><i class="fas fa-vial"></i> Required PH:</label>
+                    <input type="number" id="requiredPH" name="requiredPH" step="0.1" required>
+                </div>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="requiredN"><i class="fas fa-atom"></i> Required Nitrogen(N):</label>
+                    <input type="number" id="requiredN" name="requiredN" step="0.1" required>
+                </div>
+                <div class="form-group">
+                    <label for="requiredP"><i class="fas fa-atom"></i> Required Phosphorus(P):</label>
+                    <input type="number" id="requiredP" name="requiredP" step="0.1" required>
+                </div>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="requiredK"><i class="fas fa-atom"></i> Required potassium (K):</label>
+                    <input type="number" id="requiredK" name="requiredK" step="0.1" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="lComments"><i class="fas fa-comment"></i>Comments For Lower PH:</label>
+                <textarea id="lComments" name="lComments" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="uComments"><i class="fas fa-comment-alt"></i>Comments For Upper PH:</label>
+                <textarea id="uComments" name="uComments" rows="3"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="soilType">Soil Type:</label>
+                <input type="text" id="soilType" name="soilType" required>
+            </div>
+
+            <div class="form-group">
+                <label for="cropDetails"><i class="fas fa-info-circle"></i> Crop Details:</label>
+                <textarea id="cropDetails" name="cropDetails" rows="4"></textarea>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="irrigationTips"><i class="fas fa-tint"></i> Irrigation Tips:</label>
+                    <textarea id="irrigationTips" name="irrigationTips" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="fertilizerApplication"><i class="fas fa-flask"></i> Fertilizer Application:</label>
+                    <textarea id="fertilizerApplication" name="fertilizerApplication" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="pestManagement"><i class="fas fa-bug"></i> Pest Management:</label>
+                    <textarea id="pestManagement" name="pestManagement" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="harvesting"><i class="fas fa-cut"></i> Harvesting:</label>
+                    <textarea id="harvesting" name="harvesting" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="plantImage"><i class="fas fa-image"></i> Plant Image:</label>
+                <input type="file" id="plantImage" name="file" accept="image/*" required>
+            </div>
+            <button type="submit"><i class="fas fa-save"></i> Save Plant</button>
+        </form>
+    </section>
+
+    <section id="plant-list">
+        <h2><i class="fas fa-list"></i> Plant List</h2>
+        <table id="plantTable">
+            <thead>
+            <tr>
+                <th>Crop Type</th>
+                <th>Crop Name</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- Plant list will be populated here -->
+            </tbody>
+        </table>
+    </section>
+</div>
+
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2><i class="fas fa-edit"></i> Edit Plant</h2>
+        <div id="editPlantError" class="error-message"></div>
+        <form id="editPlantForm" enctype="multipart/form-data">
+            <input type="hidden" id="editPlantId" name="id">
+            <div class="tab">
+                <button type="button" class="tablinks active" onclick="openTab(event, 'BasicInfo')">Basic Info</button>
+                <button type="button" class="tablinks" onclick="openTab(event, 'SoilRequirements')">Soil Requirements
+                </button>
+                <button type="button" class="tablinks" onclick="openTab(event, 'CareInstructions')">Care Instructions
+                </button>
+                <button type="button" class="tablinks" onclick="openTab(event, 'AdditionalInfo')">Additional Info
+                </button>
+            </div>
+
+            <div id="BasicInfo" class="tabcontent" style="display:block;">
+                <div class="form-group">
+                    <label for="editCropType"><i class="fas fa-seedling"></i> Crop Type:</label>
+                    <input type="text" id="editCropType" name="cropType" required>
+                </div>
+                <div class="form-group">
+                    <label for="editCropName"><i class="fas fa-font"></i> Crop Name:</label>
+                    <input type="text" id="editCropName" name="cropName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editNeedDuration"><i class="fas fa-clock"></i> Need Duration:</label>
+                    <div class="input-group">
+                        <input type="number" id="editNeedDuration" name="needDuration" min="1" required>
+                        <select id="editDurationUnit" name="durationUnit">
+                            <option value="days">Days</option>
+                            <option value="months">Months</option>
+                            <option value="years">Years</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editCropDetails"><i class="fas fa-info-circle"></i> Crop Details:</label>
+                    <textarea id="editCropDetails" name="cropDetails" rows="4"></textarea>
+                </div>
+            </div>
+
+            <div id="SoilRequirements" class="tabcontent">
+                <div class="form-group">
+                    <label for="editSoilType">Soil Type:</label>
+                    <input type="text" id="editSoilType" name="soilType" required>
+                </div>
+                <div class="form-group">
+                    <label for="editRequiredPH"><i class="fas fa-vial"></i> Required PH:</label>
+                    <input type="number" id="editRequiredPH" name="requiredPH" step="0.1" required>
+                </div>
+                <div class="form-group">
+                    <label for="editRequiredN"><i class="fas fa-atom"></i> Required Nitrogen(N):</label>
+                    <input type="number" id="editRequiredN" name="requiredN" step="0.1" required>
+                </div>
+                <div class="form-group">
+                    <label for="editRequiredP"><i class="fas fa-atom"></i> Required Phosphorus(P):</label>
+                    <input type="number" id="editRequiredP" name="requiredP" step="0.1" required>
+                </div>
+                <div class="form-group">
+                    <label for="editRequiredK"><i class="fas fa-atom"></i>Required potassium (K):</label>
+                    <input type="number" id="editRequiredK" name="requiredK" step="0.1" required>
+                </div>
+            </div>
+
+            <div id="CareInstructions" class="tabcontent">
+                <div class="form-group">
+                    <label for="editIrrigationTips"><i class="fas fa-tint"></i> Irrigation Tips:</label>
+                    <textarea id="editIrrigationTips" name="irrigationTips" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editFertilizerApplication"><i class="fas fa-flask"></i> Fertilizer Application:</label>
+                    <textarea id="editFertilizerApplication" name="fertilizerApplication" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editPestManagement"><i class="fas fa-bug"></i> Pest Management:</label>
+                    <textarea id="editPestManagement" name="pestManagement" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editHarvesting"><i class="fas fa-cut"></i> Harvesting:</label>
+                    <textarea id="editHarvesting" name="harvesting" rows="3"></textarea>
+                </div>
+            </div>
+
+            <div id="AdditionalInfo" class="tabcontent">
+                <div class="form-group">
+                    <label for="editLComments"><i class="fas fa-comment"></i>Comments for Lower PH:</label>
+                    <textarea id="editLComments" name="lComments" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editUComments"><i class="fas fa-comment-alt"></i>Comments For Upper PH:</label>
+                    <textarea id="editUComments" name="uComments" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editPlantImage"><i class="fas fa-image"></i> Plant Image:</label>
+                    <input type="file" id="editPlantImage" name="file" accept="image/*">
+                </div>
+            </div>
+
+            <button type="submit"><i class="fas fa-save"></i> Update Plant</button>
+            <div class="tab">
+                <button type="button" class="tablinks active" onclick="openTab(event, 'BasicInfo')">Basic Info</button>
+                <button type="button" class="tablinks" onclick="openTab(event, 'SoilRequirements')">Soil Requirements
+                </button>
+                <button type="button" class="tablinks" onclick="openTab(event, 'CareInstructions')">Care Instructions
+                </button>
+                <button type="button" class="tablinks" onclick="openTab(event, 'AdditionalInfo')">Additional Info
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="viewModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2><i class="fas fa-eye"></i> Plant Details</h2>
+        <div id="plantDetails">
+            <!-- Plant details will be populated here -->
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const addPlantForm = document.getElementById('addPlantForm');
+        const editPlantForm = document.getElementById('editPlantForm');
+        const plantTable = document.getElementById('plantTable').getElementsByTagName('tbody')[0];
+        const editModal = document.getElementById('editModal');
+        const viewModal = document.getElementById('viewModal');
+        const addPlantError = document.getElementById('addPlantError');
+        const editPlantError = document.getElementById('editPlantError');
+
+        // Dark mode toggle functionality
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const body = document.body;
+
+        darkModeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            if (body.classList.contains('dark-mode')) {
+                darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            }
+        });
+
+        // Load plants on page load
+        loadPlants();
+
+        // Helper function to convert duration to days
+        function convertToDays(duration, unit) {
+            const value = parseFloat(duration);
+            switch(unit) {
+                case 'days':
+                    return value;
+                case 'months':
+                    return value * 30.00; // Average number of days in a month
+                case 'years':
+                    return value * 365.00; // Account for leap years
+                default:
+                    return value;
+            }
+        }
+
+        // Add Plant Form Submission
+        addPlantForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(addPlantForm);
+
+            // Convert duration to days
+            const duration = formData.get('needDuration');
+            const unit = formData.get('durationUnit');
+            const durationInDays = Math.round(convertToDays(duration, unit));
+            formData.set('needDuration', `${durationInDays} days`);
+
+            axios.post('/api/plants', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            })
+            .then(response => {
+                console.log('Plant added:', response.data);
+                addPlantForm.reset();
+                addPlantError.textContent = '';
+                loadPlants();
+            })
+            .catch(error => {
+                console.error('Error adding plant:', error);
+                handleError(error, addPlantError);
+            });
+        });
+
+        // Edit Plant Form Submission
+        editPlantForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(editPlantForm);
+            const plantId = document.getElementById('editPlantId').value;
+
+            // Convert duration to days for edit form
+            const duration = formData.get('needDuration');
+            const unit = formData.get('durationUnit');
+            const durationInDays = Math.round(convertToDays(duration, unit));
+            formData.set('needDuration', `${durationInDays} days`);
+
+            axios.put(`/api/plants/${plantId}`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            })
+            .then(response => {
+                console.log('Plant updated:', response.data);
+                editModal.style.display = 'none';
+                editPlantError.textContent = '';
+                loadPlants();
+            })
+            .catch(error => {
+                console.error('Error updating plant:', error);
+                handleError(error, editPlantError);
+            });
+        });
+
+        // Close modal when clicking on the close button or outside the modal
+        document.querySelectorAll('.close').forEach(closeBtn => {
+            closeBtn.onclick = function() {
+                editModal.style.display = 'none';
+                viewModal.style.display = 'none';
+            }
+        });
+
+        window.onclick = function(event) {
+            if (event.target == editModal) {
+                editModal.style.display = 'none';
+            }
+            if (event.target == viewModal) {
+                viewModal.style.display = 'none';
+            }
+        }
+
+        // Helper function to handle errors
+        function handleError(error, errorElement) {
+            if (error.response) {
+                console.error('Error data:', error.response.data);
+                console.error('Error status:', error.response.status);
+                console.error('Error headers:', error.response.headers);
+                errorElement.textContent = `Error: ${error.response.status} - ${error.response.data}`;
+            } else if (error.request) {
+                console.error('Error request:', error.request);
+                errorElement.textContent = 'No response received from the server.';
+            } else {
+                console.error('Error message:', error.message);
+                errorElement.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        // Load Plants Function
+        function loadPlants() {
+            const plantTable = document.getElementById('plantTable').getElementsByTagName('tbody')[0];
+            axios.get('/api/plants')
+                .then(response => {
+                    plantTable.innerHTML = '';
+                    response.data.forEach(plant => {
+                        const row = plantTable.insertRow();
+                        row.innerHTML = `
+                            <td>${plant.cropType}</td>
+                            <td>${plant.cropName}</td>
+                            <td>
+                                <button onclick="editPlant(${plant.id})">Edit</button>
+                                <button onclick="deletePlant(${plant.id})">Delete</button>
+                                <button onclick="viewPlant(${plant.id})">View</button>
+                            </td>
+                        `;
+                    });
+                })
+                .catch(error => console.error('Error loading plants:', error));
+        }
+
+        // Edit Plant Function
+        window.editPlant = function(id) {
+            axios.get(`/api/plants/${id}`)
+                .then(response => {
+                    const plant = response.data;
+                    document.getElementById('editPlantId').value = plant.id;
+                    document.getElementById('editCropType').value = plant.cropType || '';
+                    document.getElementById('editCropName').value = plant.cropName || '';
+                    document.getElementById('editCropDetails').value = plant.cropDetails || '';
+                    document.getElementById('editIrrigationTips').value = plant.irrigationTips || '';
+                    document.getElementById('editFertilizerApplication').value = plant.fertilizerApplication || '';
+                    document.getElementById('editPestManagement').value = plant.pestManagement || '';
+                    document.getElementById('editHarvesting').value = plant.harvesting || '';
+
+                    const [duration, unit] = (plant.needDuration || '').split(' ');
+                    document.getElementById('editNeedDuration').value = duration || '';
+                    document.getElementById('editDurationUnit').value = unit === 'days' ? 'days' : 'days'; // Default to days
+
+                    document.getElementById('editRequiredPH').value = plant.requiredPH || '';
+                    document.getElementById('editRequiredN').value = plant.requiredN || '';
+                    document.getElementById('editRequiredP').value = plant.requiredP || '';
+                    document.getElementById('editRequiredK').value = plant.requiredK || '';
+                    document.getElementById('editLComments').value = plant.lComments || '';
+                    document.getElementById('editUComments').value = plant.uComments || '';
+                    document.getElementById('editSoilType').value = plant.soilType || '';
+
+                    document.getElementById('editModal').style.display = 'block';
+
+                    // Show the first tab by default
+                    document.querySelector('.tablinks').click();
+                })
+                .catch(error => {
+                    console.error('Error fetching plant details:', error);
+                    alert('Failed to load plant details. Please try again.');
+                });
+        };
+
+        // Tab switching function
+        window.openTab = function(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+
+        // Delete Plant Function
+        window.deletePlant = function(id) {
+            if (confirm('Are you sure you want to delete this plant?')) {
+                axios.delete(`/api/plants/${id}`)
+                    .then(() => {
+                        console.log('Plant deleted');
+                        loadPlants();
+                    })
+                    .catch(error => console.error('Error deleting plant:', error));
+            }
+        };
+
+        // View Plant Function
+        window.viewPlant = function(id) {
+            axios.get(`/api/plants/${id}`)
+                .then(response => {
+                    const plant = response.data;
+                    document.getElementById('plantDetails').innerHTML = `
+                        <p><strong>Crop Type:</strong> ${plant.cropType || 'Not provided'}</p>
+                        <p><strong>Crop Name:</strong> ${plant.cropName || 'Not provided'}</p>
+                        <p><strong>Crop Details:</strong> ${plant.cropDetails || 'Not provided'}</p>
+                        <p><strong>Irrigation Tips:</strong> ${plant.irrigationTips || 'Not provided'}</p>
+                        <p><strong>Fertilizer Application:</strong> ${plant.fertilizerApplication || 'Not provided'}</p>
+                        <p><strong>Pest Management:</strong> ${plant.pestManagement || 'Not provided'}</p>
+                        <p><strong>Harvesting:</strong> ${plant.harvesting || 'Not provided'}</p>
+                        <p><strong>Need Duration:</strong> ${plant.needDuration || 'Not provided'}</p>
+                        <p><strong>Required PH:</strong> ${plant.requiredPH || 'Not provided'}</p>
+                        <p><strong>Required N:</strong> ${plant.requiredN || 'Not provided'}</p>
+                        <p><strong>Required P:</strong> ${plant.requiredP || 'Not provided'}</p>
+                        <p><strong>Required K:</strong> ${plant.requiredK || 'Not provided'}</p>
+                        <p><strong>L Comments:</strong> ${plant.lComments || 'Not provided'}</p>
+                        <p><strong>U Comments:</strong> ${plant.uComments || 'Not provided'}</p>
+                        <p><strong>Soil Type:</strong> ${plant.soilType || 'Not provided'}</p>
+                        ${plant.imageUrl ? `<img src="${plant.imageUrl}" alt="${plant.cropName}" style="max-width: 100%; height: auto;">` : 'No image available'}
+                    `;
+                    document.getElementById('viewModal').style.display = 'block';
+                })
+                .catch(error => console.error('Error fetching plant details:', error));
+        };
+    });
+</script>
+</body>
+</html>

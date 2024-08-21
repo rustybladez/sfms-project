@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SFMS Live Weather Forecast</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #f0f4f8;
+            --text-color: #333;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --navbar-bg: rgba(74, 144, 226, 0.9);
+            --navbar-text: white;
+            --alert-bg: rgba(255, 152, 0, 0.9);
+            --alert-text: white;
+            --forecast-bg: rgba(224, 224, 224, 0.8);
+            --button-bg: rgba(76, 175, 80, 0.9);
+            --button-hover: rgba(69, 160, 73, 0.9);
+            --effect-color: rgba(255, 255, 255, 0.7);
+        }
+
+        .dark-mode {
+            --bg-color: #1a1a1a;
+            --text-color: #f0f0f0;
+            --card-bg: rgba(44, 44, 44, 0.8);
+            --navbar-bg: rgba(51, 51, 51, 0.9);
+            --navbar-text: #f0f0f0;
+            --alert-bg: rgba(204, 112, 0, 0.9);
+            --alert-text: #f0f0f0;
+            --forecast-bg: rgba(58, 58, 58, 0.8);
+            --button-bg: rgba(54, 124, 57, 0.9);
+            --button-hover: rgba(44, 102, 47, 0.9);
+            --effect-color: rgba(255, 255, 255, 0.3);
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s, color 0.3s;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: var(--text-color);
+        }
+
+        .weather-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            transition: all 0.5s ease;
+        }
+
+        .navbar {
+            background-color: var(--navbar-bg);
+            color: var(--navbar-text);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .navbar-left, .navbar-right {
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar-right {
+            justify-content: flex-end;
+        }
+
+        .navbar-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            text-align: center;
+            flex: 2;
+        }
+
+        .back-button, #darkModeToggle {
+            background: none;
+            border: none;
+            color: var(--navbar-text);
+            font-size: 1.2em;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .back-button:hover, #darkModeToggle:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .content {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .weather-container {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 400px;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        .weather-content {
+            padding: 20px;
+        }
+
+        .weather-icon {
+            text-align: center;
+            font-size: 5em;
+            margin-bottom: 10px;
+        }
+
+        .temperature {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+
+        .description, .location {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .alert {
+            background-color: var(--alert-bg);
+            color: var(--alert-text);
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            display: none;
+            font-size: 1.1em;
+            text-align: center;
+        }
+
+        .forecast {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            background-color: var(--forecast-bg);
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .forecast-day {
+            text-align: center;
+            flex: 1;
+        }
+
+        .forecast-icon {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        button {
+            background-color: var(--button-bg);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: var(--button-hover);
+        }
+
+        .refresh-btn {
+            background-color: #f44336;
+        }
+
+        .refresh-btn:hover {
+            background-color: #d32f2f;
+        }
+
+        /* Weather effects */
+        .rain, .snow, .clouds, .clear, .mist {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .rain {
+            background-image:
+                linear-gradient(to bottom, transparent 0%, var(--effect-color) 100%);
+            animation: rain 0.3s linear infinite;
+        }
+
+        .snow {
+            background-image:
+                radial-gradient(circle, var(--effect-color) 1px, transparent 1px);
+            background-size: 15px 15px;
+            animation: snow 3s linear infinite;
+        }
+
+        .clouds {
+            background-image:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 24'%3E%3Cpath fill='%23FFF' d='M44,12c0-6.627-5.373-12-12-12S20,5.373,20,12c0,0.549,0.038,1.089,0.111,1.618C19.243,13.225,18.296,13,17.222,13c-3.783,0-6.667,2.985-6.667,6.667S13.439,26.333,17.222,26.333c2.222,0,4.389-1.046,5.778-2.842C23,23.491,22.667,23.741,23,24h17c5.512,0,10-4.488,10-10S49.512,4,44,4C43.348,4,42.704,4.103,42,4.222C41.962,4.148,41.913,4.078,41.877,4C39.359,1.421,35.858,0,32,0c-7.732,0-14,6.268-14,14c0,3.86,1.421,7.361,4,9.877V24h7C29.296,23.897,29.652,23.795,30,23.778c-0.038,0.074-0.087,0.144-0.123,0.222C30.704,23.897,31.348,24,32,24c5.512,0,10-4.488,10-10'/%3E%3C/svg%3E");
+            background-size: 200px 100px;
+            animation: clouds 20s linear infinite;
+        }
+
+        .clear {
+            background-image: radial-gradient(circle, var(--effect-color) 10%, transparent 10%);
+            background-size: 100px 100px;
+            animation: clear 10s linear infinite;
+        }
+
+        .mist {
+            background-color: var(--effect-color);
+        }
+
+        @keyframes rain {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 20px; }
+        }
+
+        @keyframes snow {
+            0% { background-position: 0 0, 0 0; }
+            100% { background-position: 15px 15px, -15px 15px; }
+        }
+
+        @keyframes clouds {
+            0% { background-position: 0 0; }
+            100% { background-position: 1000px 0; }
+        }
+
+        @keyframes clear {
+            0% { background-position: 0 0; }
+            100% { background-position: 100px 100px; }
+        }
+    </style>
+</head>
+<body>
+<div id="weatherBackground" class="weather-background"></div>
+<nav class="navbar">
+    <div class="navbar-left">
+        <button class="back-button" onclick="goBack()">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+    </div>
+    <div class="navbar-title">
+        <i class="fas fa-cloud-sun"></i> SFMS Weather
+    </div>
+    <div class="navbar-right">
+        <button id="darkModeToggle" onclick="toggleDarkMode()">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
+</nav>
+
+<div class="content">
+    <div class="weather-container">
+        <div class="weather-content">
+            <div id="weatherIcon" class="weather-icon">⏳</div>
+            <div id="temperature" class="temperature">--°C</div>
+            <div id="description" class="description">Loading...</div>
+            <div id="location" class="location">Locating...</div>
+            <div id="weatherAlert" class="alert"></div>
+            <div class="forecast">
+                <div class="forecast-day">
+                    <div id="forecast1Icon" class="forecast-icon">🌤️</div>
+                    <div>+8h</div>
+                    <div id="forecast1Temp" class="forecast-temp">--°C</div>
+                </div>
+                <div class="forecast-day">
+                    <div id="forecast2Icon" class="forecast-icon">🌤️</div>
+                    <div>+16h</div>
+                    <div id="forecast2Temp" class="forecast-temp">--°C</div>
+                </div>
+                <div class="forecast-day">
+                    <div id="forecast3Icon" class="forecast-icon">🌤️</div>
+                    <div>+24h</div>
+                    <div id="forecast3Temp" class="forecast-temp">--°C</div>
+                </div>
+            </div>
+            <div class="button-container">
+                <button onclick="toggleAlert()">Show 24h Forecast</button>
+                <button class="refresh-btn" onclick="refreshToggleCount()">
+                    <i class="fas fa-sync-alt"></i> Clear Toggles
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    const API_KEY = "744bbc23db581432d14db023bf50f1c7";
+    let currentWeather = {};
+    let forecastData = {};
+    let weatherToggleCount = parseInt(localStorage.getItem('weatherToggleCount') || '0');
+
+    function goBack() {
+        window.location.href = "/user/features/UserDashBoard";
+    }
+
+    function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(fetchWeatherData, showError);
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
+    }
+
+    function showError(error) {
+        switch(error.code) {
+            case error.PERMISSION_DENIED:
+                alert("User denied the request for Geolocation.");
+                break;
+            case error.POSITION_UNAVAILABLE:
+                alert("Location information is unavailable.");
+                break;
+            case error.TIMEOUT:
+                alert("The request to get user location timed out.");
+                break;
+            case error.UNKNOWN_ERROR:
+                alert("An unknown error occurred.");
+                break;
+        }
+    }
+
+    function fetchWeatherData(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+
+        // Fetch current weather
+        fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}`)
+            .then(response => response.json())
+            .then(data => {
+                currentWeather = {
+                    condition: data.weather[0].main,
+                    temperature: Math.round(data.main.temp),
+                    description: data.weather[0].description,
+                    location: data.name
+                };
+                updateWeatherDisplay();
+            })
+            .catch(error => console.error('Error:', error));
+
+        // Fetch forecast
+        fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}`)
+            .then(response => response.json())
+            .then(data => {
+                forecastData = {
+                    forecast1: {
+                        temp: Math.round(data.list[2].main.temp),
+                        condition: data.list[2].weather[0].main
+                    },
+                    forecast2: {
+                        temp: Math.round(data.list[5].main.temp),
+                        condition: data.list[5].weather[0].main
+                    },
+                    forecast3: {
+                        temp: Math.round(data.list[8].main.temp),
+                        condition: data.list[8].weather[0].main
+                    }
+                };
+                updateForecastDisplay();
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function updateWeatherDisplay() {
+        const iconElement = document.getElementById('weatherIcon');
+        const temperatureElement = document.getElementById('temperature');
+        const descriptionElement = document.getElementById('description');
+        const locationElement = document.getElementById('location');
+        const weatherBackground = document.getElementById('weatherBackground');
+
+        temperatureElement.textContent = `${currentWeather.temperature}°C`;
+        descriptionElement.textContent = currentWeather.description;
+        locationElement.textContent = currentWeather.location;
+
+        // Update weather icon and background
+        const { icon, background, effect } = getWeatherVisuals(currentWeather.condition);
+        iconElement.innerHTML = `<i class="${icon}"></i>`;
+        document.body.style.backgroundImage = background;
+
+        // Remove previous weather effect
+        weatherBackground.className = 'weather-background';
+        // Add new weather effect
+        weatherBackground.classList.add(effect);
+    }
+
+    function getWeatherVisuals(condition) {
+        const isDarkMode = document.body.classList.contains('dark-mode');
+        const visuals = {
+            Clear: {
+                icon: 'fas fa-sun',
+                background: isDarkMode ? 'linear-gradient(to bottom, #1a237e, #000051)' : 'linear-gradient(to bottom, #87CEEB, #E0F6FF)',
+                effect: 'clear'
+            },
+            Clouds: {
+                icon: 'fas fa-cloud',
+                background: isDarkMode ? 'linear-gradient(to bottom, #37474f, #263238)' : 'linear-gradient(to bottom, #708090, #C0C0C0)',
+                effect: 'clouds'
+            },
+            Rain: {
+                icon: 'fas fa-cloud-rain',
+                background: isDarkMode ? 'linear-gradient(to bottom, #1a237e, #000051)' : 'linear-gradient(to bottom, #4682B4, #708090)',
+                effect: 'rain'
+            },
+            Drizzle: {
+                icon: 'fas fa-cloud-rain',
+                background: isDarkMode ? 'linear-gradient(to bottom, #37474f, #263238)' : 'linear-gradient(to bottom, #708090, #B0C4DE)',
+                effect: 'rain'
+            },
+            Thunderstorm: {
+                icon: 'fas fa-bolt',
+                background: isDarkMode ? 'linear-gradient(to bottom, #1a237e, #000051)' : 'linear-gradient(to bottom, #2F4F4F, #696969)',
+                effect: 'rain'
+            },
+            Snow: {
+                icon: 'fas fa-snowflake',
+                background: isDarkMode ? 'linear-gradient(to bottom, #37474f, #263238)' : 'linear-gradient(to bottom, #B0E0E6, #F0F8FF)',
+                effect: 'snow'
+            },
+            Mist: {
+                icon: 'fas fa-smog',
+                background: isDarkMode ? 'linear-gradient(to bottom, #37474f, #263238)' : 'linear-gradient(to bottom, #D3D3D3, #F5F5F5)',
+                effect: 'mist'
+            }
+        };
+
+        return visuals[condition] || visuals['Clear'];
+    }
+
+    function updateForecastDisplay() {
+        for (let i = 1; i <= 3; i++) {
+            const { icon } = getWeatherVisuals(forecastData[`forecast${i}`].condition);
+            document.getElementById(`forecast${i}Icon`).innerHTML = `<i class="${icon}"></i>`;
+            document.getElementById(`forecast${i}Temp`).textContent = `${forecastData[`forecast${i}`].temp}°C`;
+        }
+    }
+
+    function toggleAlert() {
+        const alertElement = document.getElementById('weatherAlert');
+        if (alertElement.style.display === 'none' || alertElement.style.display === '') {
+            let alertMessage = `Based on current conditions (${currentWeather.description}), `;
+            switch(currentWeather.condition) {
+                case 'Clear':
+                    alertMessage += '☀️ Expect mostly clear skies for the next 24 hours. UV index may be high, so remember sun protection!';
+                    break;
+                case 'Clouds':
+                    alertMessage += '☁️ Overcast conditions are likely to persist. No significant precipitation is forecasted.';
+                    break;
+                case 'Rain':
+                    alertMessage += '⚠️ Rainfall is expected to continue. Be prepared for wet conditions and potential flooding in low-lying areas.';
+                    break;
+                case 'Drizzle':
+                    alertMessage += '🌦️ Light rain or drizzle may continue. Roads might be slippery, so take care if driving.';
+                    break;
+                case 'Thunderstorm':
+                    alertMessage += '⚠️ Thunderstorms are likely to persist. Stay indoors if possible and avoid open areas.';
+                    break;
+                case 'Snow':
+                    alertMessage += '❄️ Snowfall may continue. Prepare for cold temperatures and potential travel disruptions.';
+                    break;
+                case 'Mist':
+                    alertMessage += '🌫️ Misty conditions may persist, reducing visibility. Take care when traveling.';
+                    break;
+                default:
+                    alertMessage += 'No significant weather changes are expected in the next 24 hours.';
+            }
+            alertElement.textContent = alertMessage;
+            alertElement.style.display = 'block';
+
+            // Increment toggle count
+            weatherToggleCount++;
+            localStorage.setItem('weatherToggleCount', weatherToggleCount);
+
+            // Send toggle count to server
+            updateWeatherToggleCount(weatherToggleCount);
+        } else {
+            alertElement.style.display = 'none';
+        }
+    }
+
+    function updateWeatherToggleCount(count) {
+        console.log('Weather toggle count updated:', count);
+        fetch('/api/update-weather-toggle', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ count: count }),
+            credentials: 'include'
+        }).then(response => response.json())
+          .then(data => {
+              console.log('Server response:', data);
+              if (data.success) {
+                  localStorage.setItem('weatherToggleCount', data.count);
+              }
+          })
+          .catch(error => console.error('Error:', error));
+    }
+
+    function refreshToggleCount() {
+        weatherToggleCount = 0;
+        localStorage.setItem('weatherToggleCount', weatherToggleCount);
+        updateWeatherToggleCount(weatherToggleCount);
+        alert('Weather toggle count has been reset to 0.');
+    }
+
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        if (document.body.classList.contains('dark-mode')) {
+            darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            localStorage.setItem('darkMode', 'enabled');
+        } else {
+            darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            localStorage.setItem('darkMode', 'disabled');
+        }
+        updateWeatherDisplay(); // Re-apply weather visuals for dark mode
+    }
+
+    // Check for saved theme preference
+    if (localStorage.getItem('darkMode') === 'enabled') {
+        document.body.classList.add('dark-mode');
+        document.getElementById('darkModeToggle').innerHTML = '<i class="fas fa-sun"></i>';
+    }
+
+    // Initialize weather data
+    getLocation();
+
+    // Refresh weather data every 5 minutes
+    setInterval(getLocation, 300000);
+</script>
+</body>
+</html>

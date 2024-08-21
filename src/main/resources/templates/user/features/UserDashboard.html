@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SFMS User Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+  <style>
+    * {
+     margin: 0;
+     padding: 0;
+     box-sizing: border-box;
+     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  body {
+     background-color: #e0f7fa;
+     transition: background-color 0.3s ease;
+  }
+
+  .container {
+     display: flex;
+     min-height: 100vh;
+  }
+
+  /* Updated navbar styles */
+  .navbar {
+     background: linear-gradient(to right, #1976D2, #2196F3);
+     color: white;
+     padding: 1rem;
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     position: fixed;
+     top: 0;
+     left: 0;
+     right: 0;
+     z-index: 1000;
+     box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+     transition: all 0.3s ease;
+  }
+
+  .navbar h1 {
+     font-size: 1.5rem;
+     margin-left: 1rem;
+     transition: margin-left 0.3s ease;
+  }
+
+  .navbar-left, .navbar-right {
+     display: flex;
+     align-items: center;
+  }
+
+  .notification-btn, .profile-btn, .menu-toggle, .theme-toggle {
+     background: none;
+     border: none;
+     color: white;
+     font-size: 1.2rem;
+     margin-left: 1rem;
+     cursor: pointer;
+     transition: all 0.3s ease;
+  }
+
+  .notification-btn:hover, .profile-btn:hover, .menu-toggle:hover, .theme-toggle:hover {
+     transform: scale(1.1);
+     color: #BBDEFB;
+  }
+
+  .menu-toggle {
+     font-size: 1.5rem;
+     transition: transform 0.5s ease;
+     z-index: 1001;
+  }
+
+  .menu-toggle.active {
+     transform: rotate(90deg);
+  }
+
+  .profile-dropdown {
+     position: relative;
+     display: inline-block;
+  }
+
+  .dropdown-content {
+     display: none;
+     position: absolute;
+     right: 0;
+     background-color: #fff;
+     min-width: 160px;
+     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+     z-index: 1;
+     border-radius: 5px;
+     overflow: hidden;
+     transition: all 0.3s ease;
+  }
+
+  .dropdown-content a {
+     color: #333;
+     padding: 10px 16px;
+     text-decoration: none;
+     display: block;
+     transition: background-color 0.3s ease;
+  }
+
+  .dropdown-content a:hover {
+     background-color: #e1f5fe;
+  }
+
+  .show {
+     display: block;
+     animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+     from { opacity: 0; }
+     to { opacity: 1; }
+  }
+
+  /* Updated sidebar styles */
+  .sidebar {
+     position: fixed;
+     left: -280px;
+     top: 60px;
+     width: 280px;
+     height: calc(100vh - 60px);
+     background-color: #1976D2;
+     transition: all 0.3s ease-in-out;
+     z-index: 999;
+     box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+     overflow-y: auto;
+  }
+
+  .sidebar.active {
+     left: 0;
+  }
+
+  .sidebar-menu {
+     list-style-type: none;
+     padding: 1rem;
+  }
+
+  .sidebar-menu li {
+     margin-bottom: 1rem;
+  }
+
+  .sidebar-menu a {
+     color: #fff;
+     text-decoration: none;
+     transition: all 0.3s ease;
+     display: block;
+     padding: 0.8rem;
+     border-radius: 5px;
+     font-size: 1.1rem;
+  }
+
+  .sidebar-menu a:hover {
+     background-color: #2196F3;
+     padding-left: 1rem;
+  }
+
+  .main-content {
+    flex-grow: 1;
+    margin-top: 70px;
+    padding: 1.5rem;
+    display: grid;
+    grid-template-columns: 1fr 250px;
+    grid-gap: 5px;
+    transition: all 0.3s ease-in-out;
+  }
+
+  .dashboard-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 5px;
+  }
+
+  .dashboard-card {
+     background-color: white;
+     border-radius: 15px;
+     padding: 1.5rem;
+     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+     transition: all 0.3s ease;
+     display: flex;
+     flex-direction: column;
+     justify-content: space-between;
+     height: 170px;
+  }
+
+  .dashboard-card:hover {
+     transform: translateY(-5px);
+     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+
+  .dashboard-card h2 {
+     margin-bottom: 0.5rem;
+     color: #0288d1;
+     display: flex;
+     align-items: center;
+     font-size: 1.2rem;
+  }
+
+  .dashboard-card h2 i {
+     margin-right: 0.5rem;
+     font-size: 1.5rem;
+  }
+
+  .stat-number {
+     font-size: 2.5rem;
+     font-weight: bold;
+     color: #03a9f4;
+     margin-bottom: 0.25rem;
+  }
+
+  /* Weather Widget Styles */
+  .weather-widget {
+     background: linear-gradient(135deg, #4fc3f7, #03a9f4);
+     border-radius: 20px;
+     padding: 2rem;
+     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+     transition: all 0.5s ease;
+     grid-column: 2;
+     grid-row: 1 / span 2;
+     perspective: 1000px;
+     transform-style: preserve-3d;
+     overflow: hidden;
+     position: relative;
+  }
+
+  .weather-widget::before {
+     content: '';
+     position: absolute;
+     top: -50%;
+     left: -50%;
+     width: 200%;
+     height: 200%;
+     background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%);
+     transform: rotate(30deg);
+     pointer-events: none;
+  }
+
+  .weather-widget:hover {
+     transform: translateY(-10px) rotateX(5deg) rotateY(5deg);
+     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .weather-widget h2 {
+     margin-bottom: 1.5rem;
+     color: #fff;
+     font-size: 1.8rem;
+     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+     text-align: center;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+  }
+
+  .weather-widget h2 .live-indicator {
+     width: 10px;
+     height: 10px;
+     background-color: #4CAF50;
+     border-radius: 50%;
+     margin-left: 10px;
+     animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+     0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+     }
+     70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
+     }
+     100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+     }
+  }
+
+  #weather-data {
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     gap: 1.5rem;
+     color: #fff;
+  }
+
+  .weather-icon {
+     font-size: 6rem;
+     margin-bottom: 1rem;
+     text-align: center;
+     text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.3);
+     animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+     0% { transform: translateY(0px); }
+     50% { transform: translateY(-10px); }
+     100% { transform: translateY(0px); }
+  }
+
+  .weather-temp {
+     font-size: 4rem;
+     font-weight: bold;
+     text-align: center;
+     margin-bottom: 0.5rem;
+     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .weather-description {
+     text-align: center;
+     font-style: italic;
+     margin-bottom: 1.5rem;
+     font-size: 1.4rem;
+     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+  }
+
+  .weather-details {
+     display: flex;
+     justify-content: space-around;
+     width: 100%;
+     padding-top: 1.5rem;
+     border-top: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .weather-detail {
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+  }
+
+  .weather-detail-icon {
+     font-size: 2rem;
+     margin-bottom: 0.5rem;
+  }
+
+  /* Weather condition specific styles */
+  .weather-widget.clear-sky {
+     background: linear-gradient(135deg, #4fc3f7, #03a9f4);
+  }
+
+  .weather-widget.clouds {
+     background: linear-gradient(135deg, #90a4ae, #546e7a);
+  }
+
+  .weather-widget.rain {
+     background: linear-gradient(135deg, #4fc3f7, #0288d1);
+  }
+
+  .weather-widget.thunderstorm {
+     background: linear-gradient(135deg, #455a64, #263238);
+  }
+
+  .weather-widget.snow {
+     background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+  }
+
+  .weather-widget.mist {
+     background: linear-gradient(135deg, #cfd8dc, #90a4ae);
+  }
+
+  /* Tree Suggestions Styles */
+  .tree-suggestions {
+    background-color: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    grid-column: 1;
+    grid-row: 2;
+    margin-top: 5px;
+  }
+
+  .tree-suggestions h2 {
+     margin-bottom: 1rem;
+     color: #0288d1;
+     text-align: center;
+     font-size: 1.5rem;
+  }
+
+  .filter-options {
+     display: flex;
+     justify-content: center;
+     margin-bottom: 1rem;
+  }
+
+  .filter-btn {
+     background-color: #e1f5fe;
+     border: none;
+     padding: 0.7rem 1.2rem;
+     margin-right: 0.5rem;
+     cursor: pointer;
+     border-radius: 5px;
+     transition: all 0.3s ease;
+     font-weight: bold;
+     color: #0288d1;
+  }
+
+  .filter-btn.active {
+     background-color: #03a9f4;
+     color: white;
+  }
+
+  .filter-select select {
+     width: 100%;
+     padding: 0.7rem;
+     border-radius: 5px;
+     border: 1px solid #b3e5fc;
+     margin-bottom: 1rem;
+     background-color: #e1f5fe;
+     color: #0288d1;
+  }
+
+  .tree-list {
+     display: flex;
+     flex-wrap: wrap;
+     gap: 1rem;
+  }
+
+  .tree-item {
+     background-color: #e1f5fe;
+     border-radius: 5px;
+     padding: 0.7rem;
+     cursor: pointer;
+     transition: all 0.3s ease;
+     flex: 1 1 calc(33.333% - 1rem);
+  }
+
+  .tree-item:hover {
+     background-color: #b3e5fc;
+     transform: translateY(-3px);
+  }
+
+  .tree-image {
+     max-width: 100%;
+     height: auto;
+     display: block;
+     margin-top: 0.5rem;
+     border-radius: 5px;
+  }
+
+ /* ... (previous CSS remains the same) ... */
+
+/* Updated chat popup styles */
+.chatbot {
+   position: fixed;
+   bottom: 20px;
+   right: 20px;
+   background-color: #1976D2;
+   color: white;
+   padding: 1rem;
+   border-radius: 50%;
+   cursor: pointer;
+   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+   transition: all 0.3s ease;
+}
+
+.chatbot:hover {
+   transform: scale(1.1);
+   background-color: #1565C0;
+}
+
+.chat-popup {
+   display: none;
+   position: fixed;
+   bottom: 80px;
+   right: 20px;
+   width: 400px;
+   height: 500px;
+   background-color: white;
+   border-radius: 15px;
+   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+   z-index: 1000;
+   overflow: hidden;
+   transition: all 0.3s ease;
+}
+
+.chat-header {
+   background-color: #1976D2;
+   color: white;
+   padding: 15px;
+   font-weight: bold;
+   font-size: 1.2rem;
+}
+
+.chat-body {
+   height: 360px;
+   overflow-y: auto;
+   padding: 15px;
+}
+
+.chat-input {
+   display: flex;
+   padding: 15px;
+}
+
+.chat-input input {
+   flex-grow: 1;
+   padding: 10px;
+   border: 1px solid #BBDEFB;
+   border-radius: 20px;
+   outline: none;
+   font-size: 1rem;
+}
+
+.chat-input button {
+   margin-left: 10px;
+   padding: 10px 20px;
+   background-color: #1976D2;
+   color: white;
+   border: none;
+   border-radius: 20px;
+   cursor: pointer;
+   transition: background-color 0.3s ease;
+   font-size: 1rem;
+}
+
+.chat-input button:hover {
+   background-color: #1565C0;
+}
+
+.main-content.sidebar-active {
+   margin-left: 280px;
+}
+
+/* Dark mode styles */
+body.dark-mode {
+   background-color: #263238;
+   color: #ecf0f1;
+}
+
+body.dark-mode .navbar {
+   background: linear-gradient(to right, #1565C0, #0D47A1);
+}
+
+body.dark-mode .sidebar {
+   background-color: #1565C0;
+}
+
+body.dark-mode .dashboard-card,
+body.dark-mode .tree-suggestions {
+   background-color: #37474f;
+   color: #ecf0f1;
+   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .dashboard-card h2,
+body.dark-mode .tree-suggestions h2 {
+   color: #81d4fa;
+}
+
+body.dark-mode .stat-number {
+   color: #4fc3f7;
+}
+
+body.dark-mode .filter-btn {
+   background-color: #455a64;
+   color: #ecf0f1;
+}
+
+body.dark-mode .filter-btn.active {
+   background-color: #1976D2;
+}
+
+body.dark-mode .filter-select select {
+   background-color: #455a64;
+   color: #ecf0f1;
+   border-color: #546e7a;
+}
+
+body.dark-mode .tree-item {
+   background-color: #455a64;
+   color: #ecf0f1;
+}
+
+body.dark-mode .tree-item:hover {
+   background-color: #546e7a;
+}
+
+body.dark-mode .chat-popup {
+   background-color: #37474f;
+   color: #ecf0f1;
+}
+
+body.dark-mode .chat-header {
+   background-color: #1565C0;
+}
+
+body.dark-mode .chat-input input {
+   background-color: #455a64;
+   color: #ecf0f1;
+   border-color: #546e7a;
+}
+
+body.dark-mode .chat-input button {
+   background-color: #1976D2;
+}
+
+body.dark-mode .chat-input button:hover {
+   background-color: #1565C0;
+}
+
+/* Dark mode weather widget styles */
+body.dark-mode .weather-widget {
+   background: linear-gradient(135deg, #37474f, #263238);
+}
+
+body.dark-mode .weather-widget.clear-sky {
+   background: linear-gradient(135deg, #0277bd, #01579b);
+}
+
+body.dark-mode .weather-widget.clouds {
+   background: linear-gradient(135deg, #546e7a, #37474f);
+}
+
+body.dark-mode .weather-widget.rain {
+   background: linear-gradient(135deg, #0288d1, #01579b);
+}
+
+body.dark-mode .weather-widget.thunderstorm {
+   background: linear-gradient(135deg, #263238, #0d47a1);
+}
+
+body.dark-mode .weather-widget.snow {
+   background: linear-gradient(135deg, #cfd8dc, #90a4ae);
+}
+
+body.dark-mode .weather-widget.mist {
+   background: linear-gradient(135deg, #78909c, #546e7a);
+}
+
+/* Adjust text colors for better visibility in dark mode */
+body.dark-mode .weather-widget h2,
+body.dark-mode .weather-temp,
+body.dark-mode .weather-description,
+body.dark-mode .weather-detail {
+   color: #e0f7fa;
+}
+
+body.dark-mode .weather-detail-icon {
+   color: #81d4fa;
+}
+
+/* Dark mode hover effects */
+body.dark-mode .notification-btn:hover,
+body.dark-mode .profile-btn:hover,
+body.dark-mode .menu-toggle:hover,
+body.dark-mode .theme-toggle:hover {
+   color: #4fc3f7;
+}
+
+body.dark-mode .sidebar-menu a:hover {
+   background-color: #455a64;
+}
+
+body.dark-mode .chatbot:hover {
+   background-color: #0277bd;
+}
+
+/* Dark mode dropdown content */
+body.dark-mode .dropdown-content {
+   background-color: #37474f;
+}
+
+body.dark-mode .dropdown-content a {
+   color: #ecf0f1;
+}
+
+body.dark-mode .dropdown-content a:hover {
+   background-color: #455a64;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+   .main-content {
+       grid-template-columns: 1fr;
+   }
+
+   .main-content.sidebar-active {
+       margin-left: 0;
+   }
+
+   .sidebar.active {
+       width: 100%;
+   }
+
+   .weather-widget {
+       grid-column: 1;
+       grid-row: auto;
+   }
+
+   .tree-suggestions {
+       grid-column: 1;
+       grid-row: auto;
+   }
+
+   .tree-item {
+       flex: 1 1 calc(50% - 1rem);
+   }
+
+   .chat-popup {
+       width: 90%;
+       height: 70%;
+       bottom: 10%;
+       right: 5%;
+   }
+}
+
+.filter-btn i {
+  margin-right: 5px;
+}
+
+#refreshBtn {
+  background-color: #4CAF50;
+  color: white;
+}
+
+#refreshBtn:hover {
+  background-color: #45a049;
+}
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-left">
+    <div class="menu-toggle" id="menu-toggle"><i class="fas fa-bars"></i></div>
+    <h1>SFMS Dashboard</h1>
+  </div>
+  <div class="navbar-right">
+    <a href="/user/features/Notification/all" class="notification-btn"><i class="fas fa-bell"></i></a>
+    <div class="profile-dropdown">
+      <span class="profile-btn" id="profile"><i class="fas fa-user-circle"></i></span>
+      <div class="dropdown-content" id="profileDropdown">
+        <a href="/user/Profile"><i class="fas fa-user"></i> My Profile</a>
+        <a href="/user/login"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      </div>
+    </div>
+    <button class="theme-toggle" id="theme-toggle"><i class="fas fa-moon"></i></button>
+  </div>
+</nav>
+
+<div class="sidebar" id="sidebar">
+  <ul class="sidebar-menu">
+    <li><a href="/user/features/PlantManagement"><i class="fas fa-seedling"></i> Plant Management</a></li>
+    <li><a href="/user/features/SoilHealthMonitoring"><i class="fas fa-leaf"></i> Soil Health Monitoring</a></li>
+    <li><a href="/user/features/ExpertConsultation"><i class="fas fa-user-md"></i> Expert Consultation</a></li>
+    <li><a href="/user/features/weather"><i class="fas fa-cloud-sun"></i> Weather Forecast</a></li>
+  </ul>
+</div>
+
+<div class="container">
+  <main class="main-content" id="main-content">
+    <div class="dashboard-content">
+      <div class="dashboard-card" id="crops">
+        <h2><i class="fas fa-seedling"></i> Plant Service</h2>
+        <p class="stat-number" id="cropCount">0</p>
+        <p>Active Your Account Plant Service</p>
+      </div>
+
+      <div class="dashboard-card" id="weather-alerts">
+        <h2><i class="fas fa-exclamation-triangle"></i> Weather Toggle</h2>
+        <p class="stat-number" id="weatherAlertCount">0</p>
+        <p>Total weather toggles</p>
+      </div>
+    </div>
+
+    <!-- New Tree Suggestions Section -->
+    <div class="tree-suggestions">
+      <h2>Tree Name Suggestions</h2>
+      <div class="filter-options">
+        <button id="seasonBtn" class="filter-btn active">By Season</button>
+        <button id="monthBtn" class="filter-btn">By Month</button>
+        <button id="refreshBtn" class="filter-btn"><i class="fas fa-sync-alt"></i> Refresh</button>
+      </div>
+      <div id="seasonSelect" class="filter-select">
+        <select id="seasonDropdown">
+          <option value="">Select a Season</option>
+          <option value="Spring">Spring</option>
+          <option value="Summer">Summer</option>
+          <option value="Autumn">Fall</option>
+          <option value="Late autumn">Late Fall</option>
+          <option value="Winter">Winter</option>
+          <option value="Rainy">Rainy</option>
+        </select>
+      </div>
+      <div id="monthSelect" class="filter-select" style="display:none;">
+        <select id="monthDropdown">
+          <option value="">Select a Month</option>
+          <option value="January">January</option>
+          <option value="February">February</option>
+          <option value="March">March</option>
+          <option value="April">April</option>
+          <option value="May">May</option>
+          <option value="June">June</option>
+          <option value="July">July</option>
+          <option value="August">August</option>
+          <option value="September">September</option>
+          <option value="October">October</option>
+          <option value="November">November</option>
+          <option value="December">December</option>
+        </select>
+      </div>
+      <div id="treeSuggestions" class="tree-list"></div>
+      <div id="selectedTreeImage"></div>
+    </div>
+
+    <div class="weather-widget">
+      <h2><i class="fas fa-cloud-sun"></i> Weather Forecast</h2>
+      <div id="weather-data">
+        Loading weather data...
+      </div>
+    </div>
+  </main>
+</div>
+
+
+<div class="chatbot" onclick="toggleChat()">
+  <i class="far fa-comment-alt"></i>
+</div>
+<div class="chat-popup" id="chatPopup">
+  <div class="chat-header">
+    <h3><i class="fa-brands fa-pagelines"></i>   Pest Control AI Assistant</h3>
+  </div>
+  <div class="chat-body" id="chatBody">
+    <p><strong>AI:</strong> Hello! I'm your SFMS AI Assistant, specialized in pest control for agriculture. How can I help you today?</p>
+  </div>
+  <div class="chat-input">
+    <input type="text" id="chatInput" placeholder="Ask about pest control...">
+    <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+  </div>
+</div>
+<script>
+  // Navbar functionality
+  const menuToggle = document.getElementById('menu-toggle');
+  const sidebar = document.getElementById('sidebar');
+  const mainContent = document.getElementById('main-content');
+  const body = document.body;
+  const profile = document.getElementById('profile');
+  const profileDropdown = document.getElementById('profileDropdown');
+  const themeToggle = document.getElementById('theme-toggle');
+
+  // Menu toggle functionality
+  function toggleSidebar() {
+    sidebar.classList.toggle('active');
+    menuToggle.classList.toggle('active');
+    mainContent.classList.toggle('sidebar-active');
+  }
+
+  menuToggle.addEventListener('click', toggleSidebar);
+
+  // Profile dropdown functionality
+  function toggleProfileDropdown(event) {
+    event.stopPropagation();
+    profileDropdown.classList.toggle('show');
+  }
+
+  profile.addEventListener('click', toggleProfileDropdown);
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (event) => {
+    if (!profile.contains(event.target) && !profileDropdown.contains(event.target)) {
+      profileDropdown.classList.remove('show');
+    }
+  });
+
+  // Theme toggle functionality
+  function toggleTheme() {
+    body.classList.toggle('dark-mode');
+    const icon = themeToggle.querySelector('i');
+    if (body.classList.contains('dark-mode')) {
+      icon.classList.replace('fa-moon', 'fa-sun');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      icon.classList.replace('fa-sun', 'fa-moon');
+      localStorage.setItem('theme', 'light');
+    }
+  }
+
+  themeToggle.addEventListener('click', toggleTheme);
+
+  // Set initial theme based on user preference
+  document.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      body.classList.add('dark-mode');
+      themeToggle.querySelector('i').classList.replace('fa-moon', 'fa-sun');
+    }
+  });
+
+  // Close sidebar when clicking outside
+  body.addEventListener('click', (e) => {
+    if (!sidebar.contains(e.target) && e.target !== menuToggle) {
+      sidebar.classList.remove('active');
+      menuToggle.classList.remove('active');
+      mainContent.classList.remove('sidebar-active');
+    }
+  });
+
+  sidebar.addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
+
+  // Tree suggestion functionality
+  const seasonBtn = document.getElementById('seasonBtn');
+  const monthBtn = document.getElementById('monthBtn');
+  const refreshBtn = document.getElementById('refreshBtn');
+  const seasonSelect = document.getElementById('seasonSelect');
+  const monthSelect = document.getElementById('monthSelect');
+  const seasonDropdown = document.getElementById('seasonDropdown');
+  const monthDropdown = document.getElementById('monthDropdown');
+  const treeSuggestions = document.getElementById('treeSuggestions');
+  const selectedTreeImage = document.getElementById('selectedTreeImage');
+
+  seasonBtn.addEventListener('click', () => {
+    seasonBtn.classList.add('active');
+    monthBtn.classList.remove('active');
+    seasonSelect.style.display = 'block';
+    monthSelect.style.display = 'none';
+  });
+
+  monthBtn.addEventListener('click', () => {
+    monthBtn.classList.add('active');
+    seasonBtn.classList.remove('active');
+    monthSelect.style.display = 'block';
+    seasonSelect.style.display = 'none';
+  });
+
+  refreshBtn.addEventListener('click', () => {
+    seasonDropdown.value = '';
+    monthDropdown.value = '';
+    treeSuggestions.innerHTML = '';
+    selectedTreeImage.innerHTML = '';
+  });
+
+  function fetchTreeSuggestions(filterType, filterValue) {
+    console.log(`Fetching tree suggestions for ${filterType}: ${filterValue}`);
+    fetch(`/api/tree-profiles/${filterType}/${filterValue}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log("Received tree data:", data);
+        treeSuggestions.innerHTML = '';
+        if (data.length === 0) {
+          treeSuggestions.innerHTML = '<p>No trees found for the selected criteria.</p>';
+        } else {
+          data.forEach(tree => {
+            const treeElement = document.createElement('div');
+            treeElement.classList.add('tree-item');
+            treeElement.textContent = tree.treeName;
+            treeElement.addEventListener('click', () => showTreeImage(tree));
+            treeSuggestions.appendChild(treeElement);
+          });
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching tree suggestions:', error);
+        treeSuggestions.innerHTML = `<p>Error fetching tree suggestions: ${error.message}</p>`;
+      });
+  }
+
+  function showTreeImage(tree) {
+    console.log("Showing tree image for:", tree);
+    selectedTreeImage.innerHTML = '';
+    if (tree.treeImageBase64) {
+      console.log("Image base64 data length:", tree.treeImageBase64.length);
+      const img = document.createElement('img');
+      img.src = `data:image/jpeg;base64,${tree.treeImageBase64}`;
+      img.alt = tree.treeName;
+      img.classList.add('tree-image');
+      img.onerror = () => {
+        console.error("Error loading image");
+        selectedTreeImage.textContent = 'Error loading image for this tree.';
+      };
+      img.onload = () => console.log("Image loaded successfully");
+      selectedTreeImage.appendChild(img);
+      console.log("Image element created and appended");
+    } else {
+      console.log("No image data available for this tree");
+      selectedTreeImage.textContent = 'No image available for this tree.';
+    }
+  }
+
+  seasonDropdown.addEventListener('change', (e) => {
+    if (e.target.value) {
+      fetchTreeSuggestions('season', e.target.value);
+    }
+  });
+
+  monthDropdown.addEventListener('change', (e) => {
+    if (e.target.value) {
+      fetchTreeSuggestions('month', e.target.value);
+    }
+  });
+
+  // Weather functionality
+  async function getLocation() {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocation is not supported by your browser'));
+      } else {
+        navigator.geolocation.getCurrentPosition(resolve, reject);
+      }
+    });
+  }
+
+  async function fetchWeatherData(lat, lon) {
+    const apiKey = "744bbc23db581432d14db023bf50f1c7"; // OpenWeatherMap API key
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
+
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching weather data:', error);
+      return null;
+    }
+  }
+
+  async function updateWeather() {
+    const weatherDataElement = document.getElementById('weather-data');
+    const weatherWidget = document.querySelector('.weather-widget');
+    try {
+      const position = await getLocation();
+      const weatherData = await fetchWeatherData(position.coords.latitude, position.coords.longitude);
+
+      if (weatherData) {
+        const temperature = Math.round(weatherData.main.temp);
+        const humidity = weatherData.main.humidity;
+        const description = weatherData.weather[0].description;
+        const iconCode = weatherData.weather[0].icon;
+        const cityName = weatherData.name;
+
+        // Update weather widget class based on weather condition
+        weatherWidget.className = 'weather-widget ' + getWeatherClass(weatherData.weather[0].main);
+
+        weatherDataElement.innerHTML = `
+          <div class="weather-icon">${getWeatherIcon(iconCode)}</div>
+          <div class="weather-temp">${temperature}°C</div>
+          <div class="weather-description">${description}</div>
+          <div class="weather-details">
+            <div class="weather-detail">
+              <i class="fas fa-map-marker-alt weather-detail-icon"></i>
+              <span>${cityName}</span>
+            </div>
+            <div class="weather-detail">
+              <i class="fas fa-tint weather-detail-icon"></i>
+              <span>${humidity}%</span>
+            </div>
+          </div>
+        `;
+
+        // Update the title to include the live indicator
+        const weatherTitle = document.querySelector('.weather-widget h2');
+        weatherTitle.innerHTML = `<i class="fas fa-cloud-sun"></i> Weather Forecast <span class="live-indicator"></span>`;
+      } else {
+        weatherDataElement.innerHTML = `
+          <p>Unable to fetch weather data. Please try again later.</p>
+        `;
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      weatherDataElement.innerHTML = `
+        <p>Error: ${error.message}</p>
+        <p>Please enable location services and refresh the page.</p>
+      `;
+    }
+  }
+
+  function getWeatherIcon(iconCode) {
+    const iconMap = {
+      '01d': '<i class="fas fa-sun"></i>',
+      '01n': '<i class="fas fa-moon"></i>',
+      '02d': '<i class="fas fa-cloud-sun"></i>',
+      '02n': '<i class="fas fa-cloud-moon"></i>',
+      '03d': '<i class="fas fa-cloud"></i>',
+      '03n': '<i class="fas fa-cloud"></i>',
+      '04d': '<i class="fas fa-cloud"></i>',
+      '04n': '<i class="fas fa-cloud"></i>',
+      '09d': '<i class="fas fa-cloud-showers-heavy"></i>',
+      '09n': '<i class="fas fa-cloud-showers-heavy"></i>',
+      '10d': '<i class="fas fa-cloud-rain"></i>',
+      '10n': '<i class="fas fa-cloud-rain"></i>',
+      '11d': '<i class="fas fa-bolt"></i>',
+      '11n': '<i class="fas fa-bolt"></i>',
+      '13d': '<i class="fas fa-snowflake"></i>',
+      '13n': '<i class="fas fa-snowflake"></i>',
+      '50d': '<i class="fas fa-smog"></i>',
+      '50n': '<i class="fas fa-smog"></i>'
+    };
+
+    return iconMap[iconCode] || '<i class="fas fa-question"></i>';
+  }
+
+  function getWeatherClass(weatherMain) {
+    const classMap = {
+      'Clear': 'clear-sky',
+      'Clouds': 'clouds',
+      'Rain': 'rain',
+      'Drizzle': 'rain',
+      'Thunderstorm': 'thunderstorm',
+      'Snow': 'snow',
+      'Mist': 'mist',
+      'Smoke': 'mist',
+      'Haze': 'mist',
+      'Dust': 'mist',
+      'Fog': 'mist',
+      'Sand': 'mist',
+      'Ash': 'mist',
+      'Squall': 'mist',
+      'Tornado': 'mist'
+    };
+
+    return classMap[weatherMain] || '';
+  }
+
+  // New function to fetch plant profile count
+  async function fetchPlantProfileCount() {
+    try {
+      const response = await fetch('/api/plant-profiles/count');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching plant profile count:', error);
+      return 0;
+    }
+  }
+
+  // New function to fetch weather toggle count
+  async function fetchWeatherToggleCount() {
+    try {
+      const response = await fetch('/api/weather-toggle-count', {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      if (data.success) {
+        return data.count;
+      } else {
+        console.error('Failed to fetch weather toggle count:', data.message);
+        return 0;
+      }
+    } catch (error) {
+      console.error('Error fetching weather toggle count:', error);
+      return 0;
+    }
+  }
+
+  // Updated function to update dashboard data
+  async function updateDashboardData() {
+    const cropCount = document.getElementById('cropCount');
+    const weatherAlertCount = document.getElementById('weatherAlertCount');
+
+    // Fetch plant profile count
+    const plantProfileCount = await fetchPlantProfileCount();
+    cropCount.textContent = plantProfileCount;
+
+    // Fetch weather toggle count
+    const toggleCount = await fetchWeatherToggleCount();
+    weatherAlertCount.textContent = toggleCount;
+
+    console.log('Weather toggle count updated:', toggleCount);
+  }
+
+  // Initial update and set interval for future updates
+  updateDashboardData();
+  updateWeather(); // Initial call to update weather
+  setInterval(() => {
+    updateDashboardData();
+    updateWeather(); // Added updateWeather to the interval
+  }, 300000); // Update every 5 minutes (300000 ms)
+
+  // Chat functionality
+  function toggleChat() {
+    var chatPopup = document.getElementById("chatPopup");
+    chatPopup.style.display = chatPopup.style.display === "none" ? "block" : "none";
+    if (chatPopup.style.display === "block") {
+      initializeChat();
+    }
+  }
+
+  function initializeChat() {
+    const chatBody = document.getElementById('chatBody');
+    chatBody.innerHTML = `<p><strong>AI:</strong> Hello! I'm your SFMS AI Assistant, specialized in pest control for agriculture. How can I help you today?</p>`;
+  }
+
+ function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    if (message) {
+      const chatBody = document.getElementById('chatBody');
+      chatBody.innerHTML += `<p><strong>You:</strong> ${message}</p>`;
+      input.value = '';
+
+      chatBody.innerHTML += `<p><strong>AI:</strong> <em>Thinking...</em></p>`;
+      chatBody.scrollTop = chatBody.scrollHeight;
+
+      fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: message })
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        chatBody.lastElementChild.remove();
+        if (data.error) {
+          chatBody.innerHTML += `<p><strong>AI:</strong> ${data.error}</p>`;
+        } else if (data.response) {
+          chatBody.innerHTML += `<p><strong>AI:</strong> ${data.response}</p>`;
+        } else {
+          chatBody.innerHTML += `<p><strong>AI:</strong> I'm sorry, but I received an unexpected response. Please try again.</p>`;
+        }
+        chatBody.scrollTop = chatBody.scrollHeight;
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        chatBody.lastElementChild.remove();
+        chatBody.innerHTML += `<p><strong>AI:</strong> I'm sorry, but I encountered an unexpected error. Please try again later.</p>`;
+        chatBody.scrollTop = chatBody.scrollHeight;
+      });
+    }
+  }
+
+  // Event listener for the chat input
+  document.getElementById('chatInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      sendMessage();
+    }
+  });
+
+  // Initial calls to set up the dashboard
+  updateDashboardData();
+  updateWeather();
+
+  // Set intervals for periodic updates
+  setInterval(() => {
+    updateDashboardData();
+    updateWeather();
+  }, 300000); // Update every 5 minutes (300000 ms)
+</script>
+</body>
+</html>

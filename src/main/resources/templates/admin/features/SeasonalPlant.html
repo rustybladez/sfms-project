@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tree Profile Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .navbar {
+            background-color: #333;
+            overflow: hidden;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar a {
+            color: #f2f2f2;
+            text-align: center;
+            padding: 12px 16px;
+            text-decoration: none;
+            font-size: 18px;
+        }
+        .navbar a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+        .navbar-left {
+            display: flex;
+            align-items: center;
+        }
+        .navbar-right {
+            display: flex;
+            align-items: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        input[type="text"],
+        select,
+        input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        select[multiple] {
+            height: 100px;
+        }
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+        .action-buttons button {
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        #viewTreeImage, #editTreeImagePreview {
+            max-width: 100%;
+            height: auto;
+            margin-top: 10px;
+        }
+        #darkModeToggle {
+            background: none;
+            border: none;
+            color: #f2f2f2;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        /* Dark mode styles */
+        body.dark-mode {
+            background-color: #333;
+            color: #f4f4f4;
+        }
+        .dark-mode .container {
+            background: #444;
+            box-shadow: 0 0 10px rgba(255,255,255,0.1);
+        }
+        .dark-mode h1, .dark-mode h2 {
+            color: #f4f4f4;
+        }
+        .dark-mode input[type="text"],
+        .dark-mode select,
+        .dark-mode input[type="file"] {
+            background-color: #555;
+            color: #f4f4f4;
+            border-color: #666;
+        }
+        .dark-mode th {
+            background-color: #555;
+            color: #f4f4f4;
+        }
+        .dark-mode td {
+            border-color: #666;
+        }
+        .dark-mode .modal-content {
+            background-color: #444;
+            color: #f4f4f4;
+        }
+        .dark-mode .close {
+            color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="navbar-left">
+        <a href="/admin/features/AdminDashboard"><i class="fas fa-home"></i> Home</a>
+    </div>
+    <h1><i class="fas fa-leaf"></i> Seasonal Plant Management Section - SFMS</h1>
+    <div class="navbar-right">
+        <button id="darkModeToggle"><i class="fas fa-moon"></i></button>
+    </div>
+</nav>
+<div class="container">
+    <h1>Tree Profile Management</h1>
+    <form id="treeProfileForm" enctype="multipart/form-data">
+        <input type="hidden" id="treeId" name="treeId">
+        <label for="treeType">Tree Type:</label>
+        <input type="text" id="treeType" name="treeType" required>
+
+        <label for="treeName">Tree Name:</label>
+        <input type="text" id="treeName" name="treeName" required>
+
+        <label for="seasons">Seasons:</label>
+        <select id="seasons" name="seasons" multiple required>
+            <option value="Winter">Winter</option>
+            <option value="Summer">Summer</option>
+            <option value="Rainy">Rainy</option>
+            <option value="Autumn">Autumn</option>
+            <option value="Late Autumn">Late Autumn</option>
+            <option value="Spring">Spring</option>
+        </select>
+
+        <label for="harvestMonths">Harvest Months:</label>
+        <select id="harvestMonths" name="harvestMonths" multiple required>
+            <option value="January">January</option>
+            <option value="February">February</option>
+            <option value="March">March</option>
+            <option value="April">April</option>
+            <option value="May">May</option>
+            <option value="June">June</option>
+            <option value="July">July</option>
+            <option value="August">August</option>
+            <option value="September">September</option>
+            <option value="October">October</option>
+            <option value="November">November</option>
+            <option value="December">December</option>
+        </select>
+
+        <label for="treeImage">Tree Image:</label>
+        <input type="file" id="treeImage" name="treeImage" accept="image/*">
+
+        <input type="submit" value="Submit">
+    </form>
+
+    <h2>Tree Profiles</h2>
+    <table id="treeProfilesTable">
+        <thead>
+        <tr>
+            <th>Tree Type</th>
+            <th>Tree Name</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<!-- View Modal -->
+<div id="viewModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Tree Profile Details</h2>
+        <p><strong>Tree Type:</strong> <span id="viewTreeType"></span></p>
+        <p><strong>Tree Name:</strong> <span id="viewTreeName"></span></p>
+        <p><strong>Seasons:</strong> <span id="viewSeasons"></span></p>
+        <p><strong>Harvest Months:</strong> <span id="viewHarvestMonths"></span></p>
+        <img id="viewTreeImage" src="" alt="Tree Image">
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Edit Tree Profile</h2>
+        <form id="editTreeProfileForm" enctype="multipart/form-data">
+            <input type="hidden" id="editTreeId" name="treeId">
+            <label for="editTreeType">Tree Type:</label>
+            <input type="text" id="editTreeType" name="treeType" required>
+
+            <label for="editTreeName">Tree Name:</label>
+            <input type="text" id="editTreeName" name="treeName" required>
+
+            <label for="editSeasons">Seasons:</label>
+            <select id="editSeasons" name="seasons" multiple required>
+                <option value="Winter">Winter</option>
+                <option value="Summer">Summer</option>
+                <option value="Rainy">Rainy</option>
+                <option value="Autumn">Autumn</option>
+                <option value="Late Autumn">Late Autumn</option>
+                <option value="Spring">Spring</option>
+            </select>
+
+            <label for="editHarvestMonths">Harvest Months:</label>
+            <select id="editHarvestMonths" name="harvestMonths" multiple required>
+                <option value="January">January</option>
+                <option value="February">February</option>
+                <option value="March">March</option>
+                <option value="April">April</option>
+                <option value="May">May</option>
+                <option value="June">June</option>
+                <option value="July">July</option>
+                <option value="August">August</option>
+                <option value="September">September</option>
+                <option value="October">October</option>
+                <option value="November">November</option>
+                <option value="December">December</option>
+            </select>
+
+            <label for="editTreeImage">Tree Image:</label>
+            <input type="file" id="editTreeImage" name="treeImage" accept="image/*">
+            <img id="editTreeImagePreview" src="" alt="Current Tree Image">
+
+            <input type="submit" value="Update">
+        </form>
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById('treeProfileForm');
+  const table = document.getElementById('treeProfilesTable').getElementsByTagName('tbody')[0];
+  const viewModal = document.getElementById('viewModal');
+  const editModal = document.getElementById('editModal');
+  const darkModeToggle = document.getElementById('darkModeToggle');
+
+  // Dark mode toggle functionality
+  darkModeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      const icon = darkModeToggle.querySelector('i');
+      if (document.body.classList.contains('dark-mode')) {
+          icon.classList.remove('fa-moon');
+          icon.classList.add('fa-sun');
+      } else {
+          icon.classList.remove('fa-sun');
+          icon.classList.add('fa-moon');
+      }
+  });
+
+  // Close modal when clicking on <span> (x)
+  document.querySelectorAll('.close').forEach(closeBtn => {
+      closeBtn.onclick = function() {
+          viewModal.style.display = "none";
+          editModal.style.display = "none";
+      }
+  });
+
+  // Close modal when clicking outside of it
+  window.onclick = function(event) {
+      if (event.target == viewModal) {
+          viewModal.style.display = "none";
+      }
+      if (event.target == editModal) {
+          editModal.style.display = "none";
+      }
+  }
+
+  function loadTreeProfiles() {
+      fetch('/api/tree-profiles')
+          .then(response => response.json())
+          .then(data => {
+              table.innerHTML = '';
+              data.forEach(profile => {
+                  const row = table.insertRow();
+                  row.insertCell(0).textContent = profile.treeType;
+                  row.insertCell(1).textContent = profile.treeName;
+                  const actionsCell = row.insertCell(2);
+                  actionsCell.innerHTML = `
+                      <div class="action-buttons">
+                          <button onclick="viewTreeProfile(${profile.id})">View</button>
+                          <button onclick="editTreeProfile(${profile.id})">Edit</button>
+                          <button onclick="removeTreeProfile(${profile.id})">Remove</button>
+                      </div>
+                  `;
+              });
+          })
+          .catch(error => console.error('Error:', error));
+  }
+
+  function viewTreeProfile(id) {
+      fetch(`/api/tree-profiles/${id}`)
+          .then(response => response.json())
+          .then(profile => {
+              document.getElementById('viewTreeType').textContent = profile.treeType;
+              document.getElementById('viewTreeName').textContent = profile.treeName;
+              document.getElementById('viewSeasons').textContent = profile.seasons.join(', ');
+              document.getElementById('viewHarvestMonths').textContent = profile.harvestMonths.join(', ');
+              const imageElement = document.getElementById('viewTreeImage');
+              if (profile.treeImageBase64) {
+                  imageElement.src = `data:image/jpeg;base64,${profile.treeImageBase64}`;
+                  imageElement.style.display = 'block';
+              } else {
+                  console.log('No image data received');
+                  imageElement.style.display = 'none';
+              }
+              viewModal.style.display = "block";
+          })
+          .catch(error => console.error('Error:', error));
+  }
+
+  function editTreeProfile(id) {
+      fetch(`/api/tree-profiles/${id}`)
+          .then(response => response.json())
+          .then(profile => {
+              document.getElementById('editTreeId').value = profile.id;
+              document.getElementById('editTreeType').value = profile.treeType;
+              document.getElementById('editTreeName').value = profile.treeName;
+
+              // Set selected options for seasons
+              const seasonsSelect = document.getElementById('editSeasons');
+              Array.from(seasonsSelect.options).forEach(option => {
+                  option.selected = profile.seasons.includes(option.value);
+              });
+
+              // Set selected options for harvest months
+              const harvestMonthsSelect = document.getElementById('editHarvestMonths');
+              Array.from(harvestMonthsSelect.options).forEach(option => {
+                  option.selected = profile.harvestMonths.includes(option.value);
+              });
+
+              const imageElement = document.getElementById('editTreeImagePreview');
+              if (profile.treeImageBase64) {
+                  imageElement.src = `data:image/jpeg;base64,${profile.treeImageBase64}`;
+                  imageElement.style.display = 'block';
+              } else {
+                  imageElement.style.display = 'none';
+              }
+              editModal.style.display = "block";
+          })
+          .catch(error => console.error('Error:', error));
+  }
+
+  function removeTreeProfile(id) {
+      if (confirm('Are you sure you want to remove this tree profile?')) {
+          fetch(`/api/tree-profiles/${id}`, {
+              method: 'DELETE'
+          })
+          .then(response => {
+              if (response.ok) {
+                  alert('Tree profile removed successfully!');
+                  loadTreeProfiles();
+              } else {
+                  throw new Error('Failed to remove tree profile');
+              }
+          })
+          .catch(error => {
+              console.error('Error:', error);
+              alert('An error occurred while removing the tree profile.');
+          });
+      }
+  }
+
+  form.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const formData = new FormData(this);
+      const treeProfile = {
+          id: formData.get('treeId'),
+          treeType: formData.get('treeType'),
+          treeName: formData.get('treeName'),
+          seasons: Array.from(document.getElementById('seasons').selectedOptions).map(option => option.value),
+          harvestMonths: Array.from(document.getElementById('harvestMonths').selectedOptions).map(option => option.value)
+      };
+
+      formData.set('treeProfile', JSON.stringify(treeProfile));
+      formData.delete('treeId');
+      formData.delete('treeType');
+      formData.delete('treeName');
+      formData.delete('seasons');
+      formData.delete('harvestMonths');
+
+      const url = treeProfile.id ? `/api/tree-profiles/${treeProfile.id}` : '/api/tree-profiles';
+      const method = treeProfile.id ? 'PUT' : 'POST';
+
+      fetch(url, {
+          method: method,
+          body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+          console.log('Success:', data);
+          alert('Tree profile submitted successfully!');
+          this.reset();
+          document.getElementById('treeId').value = '';
+          loadTreeProfiles();
+      })
+      .catch((error) => {
+          console.error('Error:', error);
+          alert('An error occurred while submitting the tree profile.');
+      });
+  });
+
+  document.getElementById('editTreeProfileForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const formData = new FormData(this);
+      const treeProfile = {
+          id: formData.get('treeId'),
+          treeType: formData.get('treeType'),
+          treeName: formData.get('treeName'),
+          seasons: Array.from(document.getElementById('editSeasons').selectedOptions).map(option => option.value),
+          harvestMonths: Array.from(document.getElementById('editHarvestMonths').selectedOptions).map(option => option.value)
+      };
+
+      formData.set('treeProfile', JSON.stringify(treeProfile));
+      formData.delete('treeId');
+      formData.delete('treeType');
+      formData.delete('treeName');
+      formData.delete('seasons');
+      formData.delete('harvestMonths');
+
+      fetch(`/api/tree-profiles/${treeProfile.id}`, {
+          method: 'PUT',
+          body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+          console.log('Success:', data);
+          alert('Tree profile updated successfully!');
+          editModal.style.display = "none";
+          loadTreeProfiles();
+      })
+      .catch((error) => {
+          console.error('Error:', error);
+          alert('An error occurred while updating the tree profile.');
+      });
+  });
+
+  // Load tree profiles when the page loads
+  loadTreeProfiles();
+</script>
+</body>
+</html>
