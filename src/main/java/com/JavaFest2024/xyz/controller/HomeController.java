@@ -44,7 +44,7 @@ public class HomeController {
     public String login(@RequestParam String email, @RequestParam String password, Model model, HttpSession session) {
         if (userService.authenticateUser(email, password)) {
             session.setAttribute("userEmail", email);
-            return "redirect:/user/features/UserDashBoard";
+            return "user/features/UserDashBoard";
         } else {
             model.addAttribute("error", "Invalid email or password");
             return "user/login";
