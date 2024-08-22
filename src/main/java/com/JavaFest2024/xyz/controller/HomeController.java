@@ -156,7 +156,7 @@ public class HomeController {
             String fullName = adminService.getAdminFullName(email);
             model.addAttribute("welcomeMessage", "Welcome " + fullName);
             session.setAttribute("adminEmail", email);  // Set admin email in session
-            return "redirect:AdminDashboard";
+            return "redirect:admin/features/AdminDashBoard.html";
         } else {
             model.addAttribute("error", "Invalid email or password");
             return "admin/AdminLogin";
