@@ -44,23 +44,23 @@ public class HomeController {
     public String login(@RequestParam String email, @RequestParam String password, Model model, HttpSession session) {
         if (userService.authenticateUser(email, password)) {
             session.setAttribute("userEmail", email);
-            return "user/features/UserDashBoard";
+            return "user/features/UserDashboard.html";
         } else {
             model.addAttribute("error", "Invalid email or password");
             return "user/login";
         }
     }
 
-    @GetMapping("/user/features/UserDashBoard")
+    @GetMapping("/user/features/UserDashboard")
     public String UserDashBoard() {
-        return "user/features/UserDashBoard";
+        return "user/features/UserDashboard.html";
     }
 
     @GetMapping("/login/oauth2/code/google")
     public String handleGoogleLogin(HttpSession session) {
         String email = (String) session.getAttribute("userEmail");
         if (email != null) {
-            return "redirect:/user/features/UserDashBoard";
+            return "redirect:/user/features/UserDashboard.html";
         } else {
             return "redirect:/user/login";
         }
@@ -150,7 +150,7 @@ public class HomeController {
         return "admin/AdminLogin";
     }
 
-    @PostMapping("/admin/features/AdminDashboard")
+    @PostMapping("/admin/features/AdminDashBoard")
     public String adminLogin(@RequestParam String email, @RequestParam String password, Model model, HttpSession session) {
         if (adminService.authenticateAdmin(email, password)) {
             String fullName = adminService.getAdminFullName(email);
