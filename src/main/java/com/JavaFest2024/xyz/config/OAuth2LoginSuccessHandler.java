@@ -30,7 +30,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         HttpSession session = request.getSession();
         session.setAttribute("userEmail", email);
 
-        super.setDefaultTargetUrl("/user/features/UserDashBoard");
+        super.setDefaultTargetUrl("/user/features/UserDashboard");
         super.onAuthenticationSuccess(request, response, authentication);
     }
 }
