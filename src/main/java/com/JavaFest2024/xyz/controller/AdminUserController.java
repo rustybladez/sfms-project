@@ -61,12 +61,12 @@ public class AdminUserController {
     }
 
 // DashBoard Card summery
-@GetMapping("/features/AdminDashboard")
+@GetMapping("/features/AdminDashBoard")
 public String getDashboard(Model model) {
     long totalUserCount = userService.getTotalUserCount();
     model.addAttribute("totalUserCount", totalUserCount);
     model.addAttribute("welcomeMessage", "Welcome to the Admin Dashboard");
     logger.info("Total user count: {}", totalUserCount); // Add this log
-    return "admin/features/AdminDashboard"; // Update this to match your actual template name
+    return "admin/features/AdminDashBoard"; // Update this to match your actual template name
 }
 }
